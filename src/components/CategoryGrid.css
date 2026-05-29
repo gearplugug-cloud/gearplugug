@@ -1,0 +1,96 @@
+.dynamic-gear-hub {
+  padding: 80px 24px;
+}
+
+.hub-header {
+  margin-bottom: 40px;
+}
+
+.brand-filters {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+
+.brand-filter-btn {
+  padding: 8px 16px;
+  border-radius: 20px;
+  background-color: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.brand-filter-btn:hover {
+  border-color: var(--accent-color);
+}
+
+.brand-filter-btn.active {
+  background-color: var(--accent-color);
+  color: #000; /* Black text for active as requested */
+  border-color: var(--accent-color);
+}
+
+.category-section {
+  position: relative;
+  margin-bottom: 60px;
+  overflow: visible; /* Ensure parts in the margin aren't clipped */
+}
+
+.category-heading {
+  font-size: 1.5rem;
+  margin-bottom: 24px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.gear-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 24px;
+}
+
+.gear-card {
+  background-color: var(--border-light);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+  z-index: 10;
+}
+
+.gear-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+  border-color: var(--accent-color);
+}
+
+.gear-card-image {
+  height: 160px;
+  background-color: #111;
+  /* Add actual background images later */
+}
+
+.gear-card-info {
+  padding: 16px;
+}
+
+.gear-brand {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.gear-card-info h4 {
+  font-size: 1.1rem;
+  margin: 8px 0;
+}
+
+.gear-price {
+  color: var(--accent-color);
+  font-weight: 700;
+}

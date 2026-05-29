@@ -1,0 +1,66 @@
+.floating-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 50;
+  overflow: hidden;
+}
+
+.spotlight {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(255,107,0,0.1) 0%, rgba(8,8,8,0) 70%);
+}
+
+.rig-center {
+  position: absolute;
+  /* top/left are set inline */
+}
+
+.part-wrapper {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* Sine wave idle animation */
+  animation: float-idle 3s ease-in-out infinite alternate;
+}
+
+.part-label {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 8px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--accent-color);
+  margin-top: 10px;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+/* We want the labels to fade in after dismantle. 
+   We can do this by just keeping them visible but the user sees them when they separate.
+   Actually, let's keep them visible but they only appear when separated. */
+.floating-container .part-wrapper .part-label {
+  opacity: 1;
+}
+
+@keyframes float-idle {
+  0% { transform: translateY(-8px); }
+  100% { transform: translateY(8px); }
+}
+
+/* Staggered animation delays so they don't float in sync */
+.float-delay-1 { animation-delay: 0s; }
+.float-delay-2 { animation-delay: 0.4s; }
+.float-delay-3 { animation-delay: 0.8s; }
+.float-delay-4 { animation-delay: 1.2s; }
+.float-delay-5 { animation-delay: 1.6s; }
+.float-delay-6 { animation-delay: 2.0s; }
+.float-delay-7 { animation-delay: 2.4s; }

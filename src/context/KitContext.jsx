@@ -1,0 +1,117 @@
+import React, { createContext, useState, useContext, useCallback } from 'react';
+
+const KitContext = createContext();
+
+export const useKit = () => useContext(KitContext);
+
+/* ── Smart Suggestions per category ── */
+const SMART_SUGGESTIONS = {
+  'Camera Bodies': {
+    icon: '🔋',
+    text: <><strong>Nice choice!</strong> Don't forget to add a <strong>V-Mount battery</strong> from the Accessories section for uninterrupted shooting.</>,
+  },
+  'Lenses': {
+    icon: '🔒',
+    text: <><strong>Great lens!</strong> Consider adding a <strong>Matte Box</strong> or <strong>ND filter set</strong> to control exposure on outdoor shoots.</>,
+  },
+  'Sound Equipment': {
+    icon: '🎧',
+    text: <><strong>Audio covered!</strong> Pair this with a <strong>boom pole</strong> and <strong>windscreen</strong> for clean outdoor sound.</>,
+  },
+  'Tripods & Lighting': {
+    icon: '💡',
+    text: <><strong>Solid support!</strong> Consider adding <strong>diffusion panels</strong> or a <strong>light meter</strong> for a polished look.</>,
+  },
+  'Accessories': {
+    icon: '⚡',
+    text: <><strong>Smart add!</strong> Make sure your <strong>camera body</strong> is also in the kit so your accessories have a home.</>,
+  },
+};
+
+const MOTIVATIONAL_SUGGESTIONS = [
+  {
+    icon: '🔥',
+    text: <><strong>Pro Setup Detected!</strong> With all this equipment, you're going to be the best photographer on set today!</>
+  },
+  {
+    icon: '🎬',
+    text: <><strong>Cinematic Kit!</strong> This gear combination is perfect for a high-end commercial shoot. Masterpiece incoming!</>
+  }
+];
+
+export const KitProvider = ({ children }) => {
+  const [kitItems, setKitItems]     = useState([]);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [toasts, setToasts]         = useState([]);
+
+  /* ── Toast system ── */
+  const showToast = useCallback((category, isMotivational = false, motivationalIndex = 0) => {
+    let suggestion;
+    if (isMotivational) {
+      suggestion = MOTIVATIONAL_SUGGESTIONS[motivationalIndex];
+    } else {
+      suggestion = SMART_SUGGESTIONS[category];
+    }
+    
+    if (!suggestion) return;
+    const id = Date.now();
+    setToasts(prev => [...prev, { id, ...suggestion }]);
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id));
+    }, 5000);
+  }, []);
+
+  /* ── Kit operations ── */
+  const addToKit = (item) => {
+    if (!kitItems.find((i) => i.id === item.id)) {
+      const newKitSize = kitItems.length + 1;
+      setKitItems(prev => [...prev, item]);
+      setIsCartOpen(true);
+      
+      // Advanced Motivational Logic
+      if (newKitSize === 4) {
+        showToast(null, true, 0); // Trigger first motivational toast
+      } else if (newKitSize === 7) {
+        showToast(null, true, 1); // Trigger second motivational toast
+      } else {
+        showToast(item.category); // Trigger regular category toast
+      }
+    }
+  };
+
+  const removeFromKit = (itemId) => {
+    setKitItems(kitItems.filter((i) => i.id !== itemId));
+  };
+
+  const clearKit = () => setKitItems([]);
+
+  const totalCost  = kitItems.reduce((acc, item) => acc + (item.price || 0), 0);
+  const totalItems = kitItems.length;
+
+  return (
+    <KitContext.Provider value={{
+      kitItems,
+      addToKit,
+      removeFromKit,
+      clearKit,
+      totalCost,
+      totalItems,
+      isCartOpen,
+      setIsCartOpen,
+      toasts,
+      showToast,
+    }}>
+      {children}
+
+      {/* ── Toast Portal — rendered here so it's always on top ── */}
+      <div className="smart-toast-container">
+        {toasts.map(toast => (
+          <div key={toast.id} className="smart-toast">
+            <div className="toast-icon">{toast.icon}</div>
+            <div className="toast-text">{toast.text}</div>
+          </div>
+        ))}
+      </div>
+    </KitContext.Provider>
+  );
+};

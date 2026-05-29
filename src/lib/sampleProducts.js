@@ -1,0 +1,98 @@
+/**
+ * 10 sample media-equipment products for testing checkout.
+ * Prices are in UGX (Ugandan Shillings).
+ */
+const SAMPLE_PRODUCTS = [
+  {
+    id: 'sp-001',
+    name: 'Sony FX6 Cinema Camera',
+    brand: 'Sony',
+    category: 'Camera Bodies',
+    price: 12500000,
+    img: '📹',
+    description: 'Full-frame cinema camera with 4K 120fps, dual base ISO, and modular design for professional filmmakers.',
+  },
+  {
+    id: 'sp-002',
+    name: 'Canon RF 24-70mm f/2.8L',
+    brand: 'Canon',
+    category: 'Lenses',
+    price: 3200000,
+    img: '🔭',
+    description: 'Professional-grade zoom lens with constant f/2.8 aperture, ideal for documentary and event coverage.',
+  },
+  {
+    id: 'sp-003',
+    name: 'Sennheiser MKH 416',
+    brand: 'Sennheiser',
+    category: 'Sound Equipment',
+    price: 1800000,
+    img: '🎙️',
+    description: 'Industry-standard shotgun microphone for broadcast, film, and outdoor recording.',
+  },
+  {
+    id: 'sp-004',
+    name: 'DJI RS 3 Pro Gimbal',
+    brand: 'DJI',
+    category: 'Accessories',
+    price: 2700000,
+    img: '🎛️',
+    description: '3-axis gimbal stabiliser with LiDAR focusing, supporting payloads up to 4.5 kg.',
+  },
+  {
+    id: 'sp-005',
+    name: 'Manfrotto 504X Fluid Head Tripod',
+    brand: 'Manfrotto',
+    category: 'Tripods & Lighting',
+    price: 2100000,
+    img: '📐',
+    description: 'Professional video tripod with fluid head, 12 kg payload capacity, and carbon-fibre legs.',
+  },
+  {
+    id: 'sp-006',
+    name: 'Blackmagic URSA Mini Pro 12K',
+    brand: 'Blackmagic',
+    category: 'Camera Bodies',
+    price: 22000000,
+    img: '🎥',
+    description: '12K Super 35 sensor cinema camera with built-in ND filters and Blackmagic RAW recording.',
+  },
+  {
+    id: 'sp-007',
+    name: 'Sigma 18-35mm f/1.8 Art',
+    brand: 'Sigma',
+    category: 'Lenses',
+    price: 2400000,
+    img: '🔍',
+    description: 'The world\'s first f/1.8 constant-aperture zoom lens — a favourite for indie filmmakers.',
+  },
+  {
+    id: 'sp-008',
+    name: 'Rode Wireless GO II',
+    brand: 'Rode',
+    category: 'Sound Equipment',
+    price: 950000,
+    img: '📡',
+    description: 'Dual-channel wireless microphone system with on-board recording and 200 m range.',
+  },
+  {
+    id: 'sp-009',
+    name: 'Aputure 600d Pro LED Light',
+    brand: 'Aputure',
+    category: 'Tripods & Lighting',
+    price: 5500000,
+    img: '💡',
+    description: '600 W daylight-balanced LED with Bowens mount, wireless control, and weather sealing.',
+  },
+  {
+    id: 'sp-010',
+    name: 'SmallRig V-Mount Battery Kit',
+    brand: 'SmallRig',
+    category: 'Accessories',
+    price: 680000,
+    img: '🔋',
+    description: 'Dual 99 Wh V-mount batteries with D-Tap and USB-C outputs, plus dual charger.',
+  },
+];
+
+export default SAMPLE_PRODUCTS;
