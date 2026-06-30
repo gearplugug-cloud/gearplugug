@@ -9,13 +9,7 @@ gsap.registerPlugin(ScrollTrigger);
 
 const TOTAL_FRAMES = 192;
 
-const LANDING_PARTS = [
-  { id: 'part-camera', src: './parts/camera_body.png', target: '#cat-CameraBodies', name: 'Camera Body' },
-  { id: 'part-lens', src: './parts/lens.png', target: '#cat-Lenses', name: 'Cinema Lens' },
-  { id: 'part-recorder', src: './parts/recorder.png', target: '#cat-SoundEquipment', name: 'Field Recorder' },
-  { id: 'part-microphone', src: './parts/microphone.png', target: '#cat-SoundEquipment', name: 'Shotgun Mic', offset: 40 },
-  { id: 'part-tripod', src: './parts/tripod.png', target: '#cat-TripodsLighting', name: 'Carbon Tripod' },
-];
+const LANDING_PARTS = [];
 
 function getFrameUrl(index) {
   const num = String(index).padStart(3, '0');
