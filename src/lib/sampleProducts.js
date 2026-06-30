@@ -9,7 +9,7 @@ const SAMPLE_PRODUCTS = [
     brand: 'Sony',
     category: 'Camera Bodies',
     price: 12500000,
-    img: '📹',
+    img: '/fx6_camera_1782841415607.png',
     description: 'Full-frame cinema camera with 4K 120fps, dual base ISO, and modular design for professional filmmakers.',
   },
   {
@@ -18,7 +18,7 @@ const SAMPLE_PRODUCTS = [
     brand: 'Canon',
     category: 'Lenses',
     price: 3200000,
-    img: '🔭',
+    img: '/canon_lens_1782841425731.png',
     description: 'Professional-grade zoom lens with constant f/2.8 aperture, ideal for documentary and event coverage.',
   },
   {
@@ -27,7 +27,7 @@ const SAMPLE_PRODUCTS = [
     brand: 'Sennheiser',
     category: 'Sound Equipment',
     price: 1800000,
-    img: '🎙️',
+    img: '/sennheiser_mic_1782841434894.png',
     description: 'Industry-standard shotgun microphone for broadcast, film, and outdoor recording.',
   },
   {
@@ -36,7 +36,7 @@ const SAMPLE_PRODUCTS = [
     brand: 'DJI',
     category: 'Accessories',
     price: 2700000,
-    img: '🎛️',
+    img: '/dji_gimbal_1782841445580.png',
     description: '3-axis gimbal stabiliser with LiDAR focusing, supporting payloads up to 4.5 kg.',
   },
   {
@@ -45,7 +45,7 @@ const SAMPLE_PRODUCTS = [
     brand: 'Manfrotto',
     category: 'Tripods & Lighting',
     price: 2100000,
-    img: '📐',
+    img: '/manfrotto_tripod_1782841462760.png',
     description: 'Professional video tripod with fluid head, 12 kg payload capacity, and carbon-fibre legs.',
   },
   {
@@ -54,7 +54,7 @@ const SAMPLE_PRODUCTS = [
     brand: 'Blackmagic',
     category: 'Camera Bodies',
     price: 22000000,
-    img: '🎥',
+    img: '/blackmagic_ursa_1782841473178.png',
     description: '12K Super 35 sensor cinema camera with built-in ND filters and Blackmagic RAW recording.',
   },
   {
@@ -63,7 +63,7 @@ const SAMPLE_PRODUCTS = [
     brand: 'Sigma',
     category: 'Lenses',
     price: 2400000,
-    img: '🔍',
+    img: '/sigma_lens_1782841483965.png',
     description: 'The world\'s first f/1.8 constant-aperture zoom lens — a favourite for indie filmmakers.',
   },
   {
@@ -72,7 +72,7 @@ const SAMPLE_PRODUCTS = [
     brand: 'Rode',
     category: 'Sound Equipment',
     price: 950000,
-    img: '📡',
+    img: '/rode_wireless_1782841493569.png',
     description: 'Dual-channel wireless microphone system with on-board recording and 200 m range.',
   },
   {
@@ -81,7 +81,7 @@ const SAMPLE_PRODUCTS = [
     brand: 'Aputure',
     category: 'Tripods & Lighting',
     price: 5500000,
-    img: '💡',
+    img: '/aputure_light_1782841503328.png',
     description: '600 W daylight-balanced LED with Bowens mount, wireless control, and weather sealing.',
   },
   {
@@ -90,7 +90,7 @@ const SAMPLE_PRODUCTS = [
     brand: 'SmallRig',
     category: 'Accessories',
     price: 680000,
-    img: '🔋',
+    img: '/smallrig_battery_1782841513579.png',
     description: 'Dual 99 Wh V-mount batteries with D-Tap and USB-C outputs, plus dual charger.',
   },
 ];
