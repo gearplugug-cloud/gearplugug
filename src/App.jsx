@@ -1,5 +1,5 @@
-import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import { DndContext, pointerWithin } from '@dnd-kit/core';
 import { useKit } from './context/KitContext';
 import Navbar from './components/Navbar';
@@ -12,6 +12,14 @@ import ShopPortal from './components/ShopPortal';
 import LiveChat from './components/LiveChat';
 import OperationalVideo from './components/OperationalVideo';
 import RentalForm from './components/RentalForm';
+
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+}
 
 function Home() {
   return (
@@ -40,6 +48,7 @@ function App() {
 
   return (
     <DndContext onDragEnd={handleDragEnd} collisionDetection={pointerWithin}>
+      <ScrollToTop />
       <div className="app-container">
         <Navbar />
 
