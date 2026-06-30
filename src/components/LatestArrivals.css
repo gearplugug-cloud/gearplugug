@@ -1,35 +1,59 @@
 .latest-arrivals {
   padding: 80px 0 0 0;
   position: relative;
-  z-index: 10; /* Above the floating parts when scrolling down */
-  background-color: var(--bg-color); /* Need bg color to cover floating parts if they go under */
+  z-index: 10;
+  background-color: var(--bg-color);
 }
 
-/* Ensure the background is solid so floating parts don't peek through inappropriately */
 .latest-arrivals .container {
   position: relative;
   z-index: 2;
+  /* Let the container overflow horizontally so the strip goes edge to edge */
+  max-width: 100%;
+  padding: 0;
+}
+
+.latest-arrivals .container > .section-label,
+.latest-arrivals .container > .section-title,
+.latest-arrivals .divider {
+  padding: 0 20px; /* Re-apply container padding to text elements */
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .slideshow-container {
   width: 100%;
   overflow: hidden;
   margin-top: 40px;
+  position: relative;
+  padding: 10px 0;
 }
 
 .slides-wrapper {
   display: flex;
-  transition: transform 0.5s ease-in-out;
+  width: max-content;
+  animation: marquee 25s linear infinite;
+  will-change: transform;
+}
+
+.slides-wrapper:hover {
+  animation-play-state: paused;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
 }
 
 .slide {
-  flex: 0 0 100%; /* For now show 1 per view. Or maybe 3? Let's do 100% on mobile, 33.333% on desktop */
+  flex: 0 0 320px; /* Fixed card width */
+  padding: 0 12px;
 }
 
 @media (min-width: 768px) {
   .slide {
-    flex: 0 0 33.3333%;
-    padding: 0 12px;
+    flex: 0 0 400px; /* Slightly wider on desktop */
   }
 }
 
@@ -38,7 +62,7 @@
   border: 1px solid var(--border-light);
   border-radius: 8px;
   overflow: hidden;
-  transition: border-color 0.3s ease;
+  transition: border-color 0.3s ease, transform 0.3s ease;
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -46,6 +70,7 @@
 
 .product-card:hover {
   border-color: var(--accent-color);
+  transform: translateY(-5px);
 }
 
 .product-image-placeholder {
@@ -72,24 +97,4 @@
   color: var(--accent-color);
   font-weight: 700;
   font-size: 14px;
-}
-
-.dots {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-  margin-top: 32px;
-}
-
-.dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background-color: #333;
-  transition: background-color 0.3s ease, transform 0.3s ease;
-}
-
-.dot.active {
-  background-color: var(--accent-color);
-  transform: scale(1.2);
 }

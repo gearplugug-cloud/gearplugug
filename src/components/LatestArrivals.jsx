@@ -11,18 +11,8 @@ const products = [
 ];
 
 export default function LatestArrivals() {
-  const [currentIndex, setCurrentIndex] = useState(0);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % products.length);
-    }, 4000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const handleDotClick = (index) => {
-    setCurrentIndex(index);
-  };
+  // Duplicate array so marquee can loop seamlessly
+  const marqueeProducts = [...products, ...products];
 
   return (
     <section className="latest-arrivals" id="new-in">
@@ -31,9 +21,9 @@ export default function LatestArrivals() {
         <h2 className="section-title">Latest Arrivals</h2>
 
         <div className="slideshow-container">
-          <div className="slides-wrapper" style={{ transform: `translateX(-${currentIndex * 100}%)` }}>
-            {products.map((product) => (
-              <div key={product.id} className="slide">
+          <div className="slides-wrapper">
+            {marqueeProducts.map((product, idx) => (
+              <div key={`${product.id}-${idx}`} className="slide">
                 <div className="product-card">
                   <div className="product-image-placeholder">
                     {product.img ? (
@@ -56,16 +46,6 @@ export default function LatestArrivals() {
           </div>
         </div>
 
-        <div className="dots">
-          {products.map((_, idx) => (
-            <button 
-              key={idx} 
-              className={`dot ${idx === currentIndex ? 'active' : ''}`}
-              onClick={() => handleDotClick(idx)}
-              aria-label={`Go to slide ${idx + 1}`}
-            />
-          ))}
-        </div>
       </div>
       <div className="divider" style={{ marginTop: '80px' }}></div>
     </section>
