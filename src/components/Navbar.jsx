@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import './Navbar.css';
 
@@ -35,9 +35,9 @@ export default function Navbar() {
   return (
     <nav className="navbar">
       <div className="navbar-container">
-        <Link to="/" className="logo" onClick={() => setIsMenuOpen(false)}>
+        <a href="/" className="logo" onClick={() => setIsMenuOpen(false)}>
           GEAR<span className="text-accent">PLUG</span>
-        </Link>
+        </a>
 
         {/* Mobile Menu Toggle */}
         <button
@@ -70,13 +70,13 @@ export default function Navbar() {
           >
             Contact
           </button>
-          <Link
-            to="/shop"
+          <a
+            href="/shop"
             className={`nav-link btn-shop-highlight ${!onHome ? 'active' : ''}`}
             onClick={() => setIsMenuOpen(false)}
           >
             Shop Portal
-          </Link>
+          </a>
         </div>
       </div>
     </nav>

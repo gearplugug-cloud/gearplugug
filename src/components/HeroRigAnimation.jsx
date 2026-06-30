@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { Link } from 'react-router-dom';
+
 import './HeroRigAnimation.css';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -231,9 +231,9 @@ export default function HeroRigAnimation() {
           <h1 className="hero-title">GEAR UP IN <span className="text-accent">KAMPALA</span></h1>
           <p className="hero-subtitle mb-8">High-End Cinema Rental & Pro Gear Sales</p>
           <div className="flex justify-center pointer-events-auto">
-            <Link to="/shop" className="btn-shop-portal">
+            <a href="/shop" className="btn-shop-portal">
               SHOP PORTAL
-            </Link>
+            </a>
           </div>
         </div>
 

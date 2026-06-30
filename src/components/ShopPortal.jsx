@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useKit } from '../context/KitContext';
-import { Link } from 'react-router-dom';
+
 import { ArrowLeft, ShieldCheck, Truck, CreditCard, Smartphone, CheckCircle, Search, Filter, Loader2, X, Package, MapPin, User, Phone, Mail } from 'lucide-react';
 import SAMPLE_PRODUCTS from '../lib/sampleProducts';
 import './ShopPortal.css';
@@ -112,7 +112,7 @@ export default function ShopPortal() {
 
           <div className="success-actions">
             <button className="btn-primary" onClick={handleNewOrder}>Place Another Order</button>
-            <Link to="/" className="btn-outline">Return Home</Link>
+            <a href="/" className="btn-outline">Return Home</a>
           </div>
         </div>
       </div>
@@ -336,9 +336,9 @@ export default function ShopPortal() {
   return (
     <div className="shop-portal container" style={{ paddingTop: '120px', paddingBottom: '100px', minHeight: '100vh' }}>
       <div className="portal-header mb-8">
-        <Link to="/" className="back-home-link">
+        <a href="/" className="back-home-link">
           <ArrowLeft size={16} /> Back to Home
-        </Link>
+        </a>
       </div>
 
       <div className="shop-layout">
