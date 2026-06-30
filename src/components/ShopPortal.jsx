@@ -290,7 +290,9 @@ export default function ShopPortal() {
               <ul className="mini-cart-list">
                 {kitItems.map(item => (
                   <li key={item.id} className="mini-item">
-                    <div className="mini-visual">{item.img}</div>
+                    <div className="mini-visual">
+                      <img src={item.img} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '4px' }} />
+                    </div>
                     <div className="mini-details">
                       <span className="name">{item.name}</span>
                       <span className="brand">{item.brand}</span>
@@ -384,7 +386,7 @@ export default function ShopPortal() {
               filteredProducts.map(product => (
                 <div key={product.id} className="shop-item-card">
                   <div className="item-visual">
-                    <span className="item-emoji">{product.img}</span>
+                    <img src={product.img} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px 8px 0 0' }} />
                   </div>
                   <div className="item-meta">
                     <span className="item-brand">{product.brand}</span>
@@ -417,7 +419,9 @@ export default function ShopPortal() {
                 <ul className="mini-cart-list">
                   {kitItems.map(item => (
                     <li key={item.id} className="mini-item">
-                      <div className="mini-visual">{item.img}</div>
+                      <div className="mini-visual">
+                        <img src={item.img} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '4px' }} />
+                      </div>
                       <div className="mini-details">
                         <span className="name">{item.name}</span>
                         <span className="price">UGX {item.price.toLocaleString()}</span>
