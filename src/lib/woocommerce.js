@@ -26,14 +26,28 @@ export const getProducts = async () => {
   }
 };
 
-export const createOrder = async (cartItems) => {
+export const createOrder = async (cartItems, customerDetails = {}) => {
   try {
     // Map our cart items to WooCommerce line_items format
-    // Requires the WooCommerce Product ID
     const line_items = cartItems.map(item => ({
       product_id: item.id,
       quantity: 1
     }));
+
+    const payload = {
+      payment_method: customerDetails.paymentMethod === 'mobile_money' ? 'momo' : 'bacs',
+      payment_method_title: customerDetails.paymentMethod === 'mobile_money' ? 'Mobile Money' : 'Direct Bank Transfer',
+      set_paid: false,
+      line_items: line_items,
+      billing: {
+        first_name: customerDetails.fullName || 'Anonymous',
+        last_name: '',
+        address_1: customerDetails.address || '',
+        city: customerDetails.city || 'Kampala',
+        phone: customerDetails.phone || '',
+        email: customerDetails.email || 'customer@gearplug.ug'
+      }
+    };
 
     const response = await fetch(`${WC_URL}/orders`, {
       method: 'POST',
@@ -41,12 +55,7 @@ export const createOrder = async (cartItems) => {
         'Content-Type': 'application/json',
         'Authorization': `Basic ${AUTH_TOKEN}`
       },
-      body: JSON.stringify({
-        payment_method: 'bacs', // Placeholder, the user will select actual payment on the WP side
-        payment_method_title: 'Direct Bank Transfer',
-        set_paid: false,
-        line_items: line_items
-      })
+      body: JSON.stringify(payload)
     });
 
     if (!response.ok) throw new Error('Failed to create order');

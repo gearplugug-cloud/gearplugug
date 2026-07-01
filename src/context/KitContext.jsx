@@ -1,5 +1,6 @@
-import React, { createContext, useState, useContext, useCallback } from 'react';
+import React, { createContext, useState, useContext, useCallback, useEffect } from 'react';
 import SAMPLE_PRODUCTS from '../lib/sampleProducts';
+import { getProducts as fetchWooProducts } from '../lib/woocommerce';
 
 const KitContext = createContext();
 
@@ -140,16 +141,42 @@ export const KitProvider = ({ children }) => {
   };
   
   // Marketplace products state with localStorage persistence
-  const [products, setProducts] = useState(() => {
-    try {
-      const saved = localStorage.getItem('gearplug_marketplace_products');
-      const customProducts = saved ? JSON.parse(saved) : [];
-      return [...SAMPLE_PRODUCTS, ...customProducts];
-    } catch (e) {
-      console.error("Failed to load products from localStorage", e);
-      return SAMPLE_PRODUCTS;
-    }
-  });
+  const [products, setProducts] = useState([]);
+
+  useEffect(() => {
+    const loadProducts = async () => {
+      let customProducts = [];
+      try {
+        const saved = localStorage.getItem('gearplug_marketplace_products');
+        customProducts = saved ? JSON.parse(saved) : [];
+      } catch (e) {
+        console.error("Failed to load products from localStorage", e);
+      }
+
+      try {
+        const wooItems = await fetchWooProducts();
+        if (wooItems && wooItems.length > 0) {
+          const mappedWoo = wooItems.map(wp => ({
+            id: wp.id,
+            name: wp.name,
+            brand: wp.attributes?.find(attr => attr.name.toLowerCase() === 'brand')?.options[0] || 'Generic',
+            category: wp.categories?.[0]?.name || 'Accessories',
+            price: parseFloat(wp.price || 0),
+            description: wp.description?.replace(/<[^>]*>/g, '') || '',
+            img: wp.images?.[0]?.src || '/fx6_camera_1782841415607.png',
+            isWooCommerce: true
+          }));
+          setProducts([...mappedWoo, ...customProducts]);
+        } else {
+          setProducts([...SAMPLE_PRODUCTS, ...customProducts]);
+        }
+      } catch (e) {
+        console.error("Failed to fetch WooCommerce products, falling back to samples", e);
+        setProducts([...SAMPLE_PRODUCTS, ...customProducts]);
+      }
+    };
+    loadProducts();
+  }, []);
 
   const addMarketplaceProduct = (newProduct) => {
     const productWithSeller = {

@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useKit } from '../context/KitContext';
+import { createOrder as createWooCommerceOrder } from '../lib/woocommerce';
 
 import { ArrowLeft, ShieldCheck, Truck, CreditCard, Smartphone, CheckCircle, Search, Filter, Loader2, X, Package, MapPin, User, Phone, Mail, Upload, Camera } from 'lucide-react';
 import './ShopPortal.css';
@@ -336,7 +337,7 @@ export default function ShopPortal() {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleCheckout = (e) => {
+  const handleCheckout = async (e) => {
     e.preventDefault();
     if (kitItems.length === 0) return;
     setIsCheckingOut(true);
@@ -350,12 +351,20 @@ export default function ShopPortal() {
       city: form.city || 'Kampala'
     };
 
-    // Simulate order processing
+    try {
+      const wooOrder = await createWooCommerceOrder(kitItems, form);
+      if (wooOrder && wooOrder.id) {
+        newOrder.id = `WC-${wooOrder.id}`;
+      }
+    } catch (err) {
+      console.warn("Failed to sync checkout with WooCommerce backend, fallback local order placed:", err);
+    }
+
     setTimeout(() => {
       addOrder(newOrder);
       setIsCheckingOut(false);
       setView('success');
-    }, 2000);
+    }, 1500);
   };
 
   const handleNewOrder = () => {
