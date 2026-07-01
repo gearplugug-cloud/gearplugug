@@ -40,10 +40,73 @@ const MOTIVATIONAL_SUGGESTIONS = [
   }
 ];
 
+const MOCK_USERS = [
+  {
+    id: 'usr-001',
+    name: 'Emma Patrick',
+    email: 'emma@gearplug.ug',
+    phone: '+256 701 234 567',
+    role: 'Professional Filmmaker',
+    avatar: '🎥',
+    company: 'Aura Media Kampala',
+    location: 'Kampala, UG'
+  },
+  {
+    id: 'usr-002',
+    name: 'Nsubuga Henry',
+    email: 'henry@director.ug',
+    phone: '+256 782 999 888',
+    role: 'Commercial Director',
+    avatar: '🎬',
+    company: 'Nile Motion Pictures',
+    location: 'Entebbe, UG'
+  }
+];
+
 export const KitProvider = ({ children }) => {
   const [kitItems, setKitItems]     = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [toasts, setToasts]         = useState([]);
+
+  // User Profile States
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('gearplug_current_user');
+      return saved ? JSON.parse(saved) : MOCK_USERS[0];
+    } catch (e) {
+      return MOCK_USERS[0];
+    }
+  });
+
+  const changeUser = (user) => {
+    setCurrentUser(user);
+    try {
+      localStorage.setItem('gearplug_current_user', JSON.stringify(user));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  // Orders/Purchases History State
+  const [orders, setOrders] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('gearplug_orders') || '[]');
+    } catch (e) {
+      return [];
+    }
+  });
+
+  const addOrder = (order) => {
+    setOrders(prev => {
+      const next = [...prev, order];
+      try {
+        localStorage.setItem('gearplug_orders', JSON.stringify(next));
+      } catch (e) {
+        console.error(e);
+      }
+      return next;
+    });
+  };
   
   // Marketplace products state with localStorage persistence
   const [products, setProducts] = useState(() => {
@@ -58,12 +121,22 @@ export const KitProvider = ({ children }) => {
   });
 
   const addMarketplaceProduct = (newProduct) => {
+    const productWithSeller = {
+      ...newProduct,
+      sellerId: currentUser.id,
+      seller: {
+        name: currentUser.name,
+        phone: currentUser.phone,
+        email: currentUser.email,
+        company: currentUser.company
+      }
+    };
     setProducts(prev => {
-      const updated = [...prev, newProduct];
+      const updated = [...prev, productWithSeller];
       try {
         const saved = localStorage.getItem('gearplug_marketplace_products');
         const customProducts = saved ? JSON.parse(saved) : [];
-        const newCustomList = [...customProducts, newProduct];
+        const newCustomList = [...customProducts, productWithSeller];
         localStorage.setItem('gearplug_marketplace_products', JSON.stringify(newCustomList));
       } catch (e) {
         console.error("Failed to save product to localStorage", e);
@@ -130,6 +203,11 @@ export const KitProvider = ({ children }) => {
       showToast,
       products,
       addMarketplaceProduct,
+      currentUser,
+      changeUser,
+      orders,
+      addOrder,
+      MOCK_USERS,
     }}>
       {children}
 

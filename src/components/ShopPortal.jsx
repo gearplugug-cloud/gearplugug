@@ -7,7 +7,7 @@ import './ShopPortal.css';
 const CATEGORIES = ['All', 'Camera Bodies', 'Lenses', 'Sound Equipment', 'Accessories', 'Tripods & Lighting'];
 
 export default function ShopPortal() {
-  const { kitItems, totalCost, clearKit, addToKit, removeFromKit, products, addMarketplaceProduct } = useKit();
+  const { kitItems, totalCost, clearKit, addToKit, removeFromKit, products, addMarketplaceProduct, currentUser, changeUser, orders, addOrder, MOCK_USERS } = useKit();
   const [view, setView] = useState('browse'); // 'browse' | 'checkout' | 'success'
   const [activeCategory, setActiveCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
@@ -256,12 +256,16 @@ export default function ShopPortal() {
       alert("Please fill in all required fields.");
       return;
     }
+    const sellerPayout = parseFloat(listingForm.price);
+    const calculatedListingPrice = Math.round(sellerPayout / 0.8);
+
     const newProduct = {
       id: `mp-${Date.now()}`,
       name: listingForm.name,
       brand: listingForm.brand,
       category: listingForm.category,
-      price: parseFloat(listingForm.price),
+      price: calculatedListingPrice,
+      sellerPayout: sellerPayout,
       description: listingForm.description,
       img: listingForm.img || '/fx6_camera_1782841415607.png',
       condition: listingForm.condition,
@@ -298,8 +302,18 @@ export default function ShopPortal() {
     if (kitItems.length === 0) return;
     setIsCheckingOut(true);
 
+    const newOrder = {
+      id: `GP-${Date.now().toString(36).toUpperCase()}`,
+      customerId: currentUser.id,
+      date: new Date().toISOString(),
+      items: kitItems.map(item => ({ id: item.id, name: item.name, price: item.price })),
+      total: totalCost,
+      city: form.city || 'Kampala'
+    };
+
     // Simulate order processing
     setTimeout(() => {
+      addOrder(newOrder);
       setIsCheckingOut(false);
       setView('success');
     }, 2000);
@@ -673,7 +687,15 @@ export default function ShopPortal() {
               <span className="section-label">Inventory Hub</span>
               <h1 className="section-title" style={{ marginBottom: 0 }}>Browse Equipment</h1>
             </div>
-            <button className="btn-list-gear" onClick={() => setIsListingModalOpen(true)}>
+            <button className="btn-list-gear" onClick={() => {
+              setListingForm(prev => ({
+                ...prev,
+                sellerName: currentUser.name,
+                sellerPhone: currentUser.phone,
+                sellerEmail: currentUser.email || ''
+              }));
+              setIsListingModalOpen(true);
+            }}>
               + List Your Gear
             </button>
           </header>
@@ -692,9 +714,211 @@ export default function ShopPortal() {
             >
               🔨 Bidding Sessions (Live Auctions)
             </button>
+            <button 
+              className={`shop-tab-btn ${shopTab === 'profile' ? 'active' : ''}`}
+              onClick={() => setShopTab('profile')}
+            >
+              👤 My Profile Dashboard
+            </button>
           </div>
 
-          {shopTab === 'bid' ? (
+          {shopTab === 'profile' ? (
+            /* User Profile & Dashboard View */
+            <div className="profile-dashboard-layout">
+              {/* Profile Card / Header */}
+              <div className="profile-hero-card shadow-premium">
+                <div className="profile-avatar-large">
+                  {currentUser.avatar}
+                </div>
+                <div className="profile-primary-details">
+                  <div className="name-badge-row">
+                    <h2>{currentUser.name}</h2>
+                    <span className="user-role-badge">{currentUser.role}</span>
+                  </div>
+                  <p className="user-org text-muted">{currentUser.company} • {currentUser.location}</p>
+                  
+                  <div className="user-contact-pills">
+                    <span className="contact-pill"><Phone size={12} /> {currentUser.phone}</span>
+                    <span className="contact-pill"><Mail size={12} /> {currentUser.email}</span>
+                  </div>
+                </div>
+
+                {/* Profile Switcher dropdown */}
+                <div className="profile-switcher-wrapper">
+                  <label>Switch Profile Account:</label>
+                  <select 
+                    value={currentUser.id} 
+                    onChange={(e) => {
+                      const selected = MOCK_USERS.find(u => u.id === e.target.value);
+                      if (selected) changeUser(selected);
+                    }}
+                    className="profile-select-dropdown"
+                  >
+                    {MOCK_USERS.map(user => (
+                      <option key={user.id} value={user.id}>{user.name} ({user.role})</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Dashboard Stats */}
+              <div className="dashboard-stats-grid mb-8">
+                <div className="stat-card shadow-premium">
+                  <span className="stat-title">My Gear Listings</span>
+                  <strong className="stat-number">
+                    {products.filter(p => p.sellerId === currentUser.id).length}
+                  </strong>
+                  <span className="stat-note">Items listed for sale</span>
+                </div>
+                <div className="stat-card shadow-premium">
+                  <span className="stat-title">Bids Placed</span>
+                  <strong className="stat-number">
+                    {auctions.filter(a => a.highestBidder === currentUser.name).length}
+                  </strong>
+                  <span className="stat-note">Active auction sessions</span>
+                </div>
+                <div className="stat-card shadow-premium">
+                  <span className="stat-title">Order History</span>
+                  <strong className="stat-number">
+                    {orders.filter(o => o.customerId === currentUser.id).length}
+                  </strong>
+                  <span className="stat-note">Completed purchases</span>
+                </div>
+              </div>
+
+              {/* Transactions Tab Section */}
+              <div className="profile-details-sections">
+                {/* Listings */}
+                <div className="dashboard-section shadow-premium">
+                  <h3>My Gear for Sale</h3>
+                  {products.filter(p => p.sellerId === currentUser.id).length === 0 ? (
+                    <p className="no-data text-muted">You haven't listed any equipment yet. Click "+ List Your Gear" to sell.</p>
+                  ) : (
+                    <div className="dashboard-table-wrapper">
+                      <table className="dashboard-table">
+                        <thead>
+                          <tr>
+                            <th>Gear</th>
+                            <th>Desired Payout</th>
+                            <th>Listing Price (20% Fee Added)</th>
+                            <th>Condition</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {products.filter(p => p.sellerId === currentUser.id).map(prod => (
+                            <tr key={prod.id}>
+                              <td className="table-gear-cell">
+                                <img src={prod.img} alt={prod.name} />
+                                <div>
+                                  <strong>{prod.name}</strong>
+                                  <span className="text-muted block text-xs">{prod.brand}</span>
+                                </div>
+                              </td>
+                              <td className="text-accent font-bold">
+                                UGX {(prod.sellerPayout || prod.price * 0.8).toLocaleString()}
+                              </td>
+                              <td className="font-bold">
+                                UGX {prod.price.toLocaleString()}
+                              </td>
+                              <td>
+                                <span className="condition-pill">{prod.condition}</span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+
+                {/* Bidding Activity */}
+                <div className="dashboard-section shadow-premium mt-8">
+                  <h3>Active Auction Bids</h3>
+                  {auctions.filter(a => a.highestBidder === currentUser.name).length === 0 ? (
+                    <p className="no-data text-muted">No active bids. Switch to "Live Auctions" to start bidding!</p>
+                  ) : (
+                    <div className="dashboard-table-wrapper">
+                      <table className="dashboard-table">
+                        <thead>
+                          <tr>
+                            <th>Item</th>
+                            <th>My High Bid</th>
+                            <th>Time Remaining</th>
+                            <th>Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {auctions.map(auc => {
+                            if (auc.highestBidder !== currentUser.name) return null;
+                            const isEnding = auc.timeLeft < 3600;
+                            return (
+                              <tr key={auc.id}>
+                                <td className="table-gear-cell">
+                                  <img src={auc.img} alt={auc.name} />
+                                  <div>
+                                    <strong>{auc.name}</strong>
+                                    <span className="text-muted block text-xs">{auc.brand}</span>
+                                  </div>
+                                </td>
+                                <td className="text-accent font-bold">
+                                  UGX {auc.currentBid.toLocaleString()}
+                                </td>
+                                <td className={isEnding ? 'text-red font-bold' : ''}>
+                                  {auc.timeLeft > 0 ? formatTime(auc.timeLeft) : 'ENDED'}
+                                </td>
+                                <td>
+                                  <span className="status-badge winning">👑 High Bidder</span>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+
+                {/* Orders History */}
+                <div className="dashboard-section shadow-premium mt-8">
+                  <h3>Order History</h3>
+                  {orders.filter(o => o.customerId === currentUser.id).length === 0 ? (
+                    <p className="no-data text-muted">You have no past purchases.</p>
+                  ) : (
+                    <div className="dashboard-table-wrapper">
+                      <table className="dashboard-table">
+                        <thead>
+                          <tr>
+                            <th>Order ID</th>
+                            <th>Date</th>
+                            <th>Items</th>
+                            <th>Total Price</th>
+                            <th>City</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {orders.filter(o => o.customerId === currentUser.id).map(ord => (
+                            <tr key={ord.id}>
+                              <td className="font-mono text-xs">{ord.id}</td>
+                              <td>{new Date(ord.date).toLocaleDateString()}</td>
+                              <td>
+                                <ul className="table-items-list">
+                                  {ord.items.map((it, idx) => (
+                                    <li key={idx}>{it.name}</li>
+                                  ))}
+                                </ul>
+                              </td>
+                              <td className="font-bold">UGX {ord.total.toLocaleString()}</td>
+                              <td>{ord.city}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          ) : shopTab === 'bid' ? (
             /* Live Auctions View */
             <div className="shop-auctions-grid">
               {auctions.map(auc => (
@@ -963,17 +1187,53 @@ export default function ShopPortal() {
                   
                   <div className="form-row">
                     <div className="form-field">
-                      <label>Price (UGX) *</label>
+                      <label>Your Desired Payout (UGX) *</label>
                       <input 
                         type="number" 
                         name="price" 
-                        placeholder="e.g. 8500000" 
+                        placeholder="e.g. 8000000" 
                         value={listingForm.price} 
                         onChange={handleListingFormChange} 
                         required 
                       />
                     </div>
                   </div>
+
+                  {listingForm.price && !isNaN(parseFloat(listingForm.price)) && (
+                    <div className="ai-pricing-widget">
+                      <div className="ai-widget-header">
+                        <span className="ai-sparkle">✨</span>
+                        <span>AI Pricing Assistant</span>
+                      </div>
+                      
+                      <div className="pricing-breakdown">
+                        <div className="breakdown-row">
+                          <span>Your Desired Payout:</span>
+                          <span>UGX {parseFloat(listingForm.price || 0).toLocaleString()}</span>
+                        </div>
+                        <div className="breakdown-row">
+                          <span>Gear Plug Fee (20%):</span>
+                          <span>UGX {Math.round(parseFloat(listingForm.price || 0) * 0.25).toLocaleString()}</span>
+                        </div>
+                        <div className="breakdown-row highlight">
+                          <span>Buyer Listing Price:</span>
+                          <span className="text-accent font-bold">UGX {Math.round(parseFloat(listingForm.price || 0) / 0.8).toLocaleString()}</span>
+                        </div>
+                      </div>
+
+                      <div className="ai-feedback">
+                        <strong>AI Valuation:</strong> {
+                          listingForm.brand.toLowerCase() === 'sony' && listingForm.category === 'Camera Bodies'
+                            ? "Sony camera bodies hold high resale value in Kampala. Your payout target is very competitive!"
+                            : listingForm.brand.toLowerCase() === 'leica'
+                            ? "Leica is a premium luxury brand. High collector demand ensures fast sale at this pricing!"
+                            : parseFloat(listingForm.price) > 10000000
+                            ? "High-ticket cinema gear. The AI suggests adding detail notes on shutter count/sensor check."
+                            : "This payout falls within the typical Kampala marketplace average. Great choice!"
+                        }
+                      </div>
+                    </div>
+                  )}
                   
                   <div className="form-field full-width">
                     <label>Description & Condition Notes</label>
