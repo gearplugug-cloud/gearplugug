@@ -69,10 +69,20 @@ export const KitProvider = ({ children }) => {
   const [toasts, setToasts]         = useState([]);
 
   // User Profile States
+  const [profiles, setProfiles] = useState(() => {
+    try {
+      const saved = localStorage.getItem('gearplug_profiles');
+      return saved ? JSON.parse(saved) : MOCK_USERS;
+    } catch (e) {
+      return MOCK_USERS;
+    }
+  });
+
   const [currentUser, setCurrentUser] = useState(() => {
     try {
       const saved = localStorage.getItem('gearplug_current_user');
-      return saved ? JSON.parse(saved) : MOCK_USERS[0];
+      if (saved) return JSON.parse(saved);
+      return MOCK_USERS[0];
     } catch (e) {
       return MOCK_USERS[0];
     }
@@ -82,6 +92,24 @@ export const KitProvider = ({ children }) => {
     setCurrentUser(user);
     try {
       localStorage.setItem('gearplug_current_user', JSON.stringify(user));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const createProfile = (newProfile) => {
+    setProfiles(prev => {
+      const next = [...prev, newProfile];
+      try {
+        localStorage.setItem('gearplug_profiles', JSON.stringify(next));
+      } catch (e) {
+        console.error(e);
+      }
+      return next;
+    });
+    setCurrentUser(newProfile);
+    try {
+      localStorage.setItem('gearplug_current_user', JSON.stringify(newProfile));
     } catch (e) {
       console.error(e);
     }
@@ -207,7 +235,8 @@ export const KitProvider = ({ children }) => {
       changeUser,
       orders,
       addOrder,
-      MOCK_USERS,
+      profiles,
+      createProfile,
     }}>
       {children}
 

@@ -1966,3 +1966,30 @@
 .ai-feedback strong {
   color: #fff;
 }
+
+/* ── Profile Switcher Row & Button ── */
+.profile-switcher-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.btn-create-profile-trigger {
+  background: rgba(255, 102, 0, 0.1);
+  border: 1px solid rgba(255, 102, 0, 0.3);
+  color: var(--accent-color);
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-create-profile-trigger:hover {
+  background: var(--accent-color);
+  color: #000;
+  border-color: var(--accent-color);
+  box-shadow: 0 4px 15px rgba(255, 102, 0, 0.25);
+}

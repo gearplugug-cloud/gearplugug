@@ -7,8 +7,20 @@ import './ShopPortal.css';
 const CATEGORIES = ['All', 'Camera Bodies', 'Lenses', 'Sound Equipment', 'Accessories', 'Tripods & Lighting'];
 
 export default function ShopPortal() {
-  const { kitItems, totalCost, clearKit, addToKit, removeFromKit, products, addMarketplaceProduct, currentUser, changeUser, orders, addOrder, MOCK_USERS } = useKit();
+  const { kitItems, totalCost, clearKit, addToKit, removeFromKit, products, addMarketplaceProduct, currentUser, changeUser, orders, addOrder, profiles, createProfile } = useKit();
   const [view, setView] = useState('browse'); // 'browse' | 'checkout' | 'success'
+  
+  // Profile creation modal and form state
+  const [isCreateProfileModalOpen, setIsCreateProfileModalOpen] = useState(false);
+  const [profileForm, setProfileForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    role: 'Professional Filmmaker',
+    company: '',
+    location: 'Kampala, UG',
+    avatar: '📷'
+  });
   const [activeCategory, setActiveCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
@@ -237,6 +249,35 @@ export default function ShopPortal() {
 
   const handleListingFormChange = (e) => {
     setListingForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleProfileFormChange = (e) => {
+    setProfileForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleProfileSubmit = (e) => {
+    e.preventDefault();
+    if (!profileForm.name || !profileForm.email || !profileForm.phone) {
+      alert("Please fill in all required fields.");
+      return;
+    }
+    const newProfile = {
+      id: `usr-${Date.now()}`,
+      ...profileForm
+    };
+    createProfile(newProfile);
+    setIsCreateProfileModalOpen(false);
+    // Reset form
+    setProfileForm({
+      name: '',
+      email: '',
+      phone: '',
+      role: 'Professional Filmmaker',
+      company: '',
+      location: 'Kampala, UG',
+      avatar: '📷'
+    });
+    alert(`Profile created successfully! Welcome, ${newProfile.name}!`);
   };
 
   const handleImageUpload = (e) => {
@@ -746,18 +787,29 @@ export default function ShopPortal() {
                 {/* Profile Switcher dropdown */}
                 <div className="profile-switcher-wrapper">
                   <label>Switch Profile Account:</label>
-                  <select 
-                    value={currentUser.id} 
-                    onChange={(e) => {
-                      const selected = MOCK_USERS.find(u => u.id === e.target.value);
-                      if (selected) changeUser(selected);
-                    }}
-                    className="profile-select-dropdown"
-                  >
-                    {MOCK_USERS.map(user => (
-                      <option key={user.id} value={user.id}>{user.name} ({user.role})</option>
-                    ))}
-                  </select>
+                  <div className="profile-switcher-row">
+                    <select 
+                      value={currentUser.id} 
+                      onChange={(e) => {
+                        const selected = profiles.find(u => u.id === e.target.value);
+                        if (selected) changeUser(selected);
+                      }}
+                      className="profile-select-dropdown"
+                    >
+                      {profiles.map(user => (
+                        <option key={user.id} value={user.id}>{user.name} ({user.role})</option>
+                      ))}
+                    </select>
+                    
+                    <button 
+                      type="button" 
+                      className="btn-create-profile-trigger" 
+                      onClick={() => setIsCreateProfileModalOpen(true)}
+                      title="Create New Profile"
+                    >
+                      + New Profile
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -1319,6 +1371,133 @@ export default function ShopPortal() {
                 </button>
                 <button type="submit" className="btn-submit-listing">
                   Publish Listing
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Create Profile Modal ── */}
+      {isCreateProfileModalOpen && (
+        <div className="marketplace-modal-overlay">
+          <div className="marketplace-modal shadow-premium">
+            <button className="modal-close-btn" onClick={() => setIsCreateProfileModalOpen(false)}>
+              <X size={20} />
+            </button>
+            <div className="modal-header">
+              <User size={24} className="text-accent" />
+              <h2>Create Your Profile</h2>
+              <p className="text-muted">Register your filmmaking/rental profile on Gear Plug to personalize your dashboard.</p>
+            </div>
+            
+            <form onSubmit={handleProfileSubmit} className="marketplace-form">
+              <div className="form-grid">
+                <div className="form-main-details">
+                  <div className="form-row">
+                    <div className="form-field">
+                      <label>Full Name *</label>
+                      <input 
+                        type="text" 
+                        name="name" 
+                        placeholder="e.g. John Doe" 
+                        value={profileForm.name} 
+                        onChange={handleProfileFormChange} 
+                        required 
+                      />
+                    </div>
+                    <div className="form-field">
+                      <label>Email Address *</label>
+                      <input 
+                        type="email" 
+                        name="email" 
+                        placeholder="e.g. john@example.com" 
+                        value={profileForm.email} 
+                        onChange={handleProfileFormChange} 
+                        required 
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="form-row">
+                    <div className="form-field">
+                      <label>Phone Number *</label>
+                      <input 
+                        type="tel" 
+                        name="phone" 
+                        placeholder="e.g. +256 700 123 456" 
+                        value={profileForm.phone} 
+                        onChange={handleProfileFormChange} 
+                        required 
+                      />
+                    </div>
+                    <div className="form-field">
+                      <label>Professional Role *</label>
+                      <select 
+                        name="role" 
+                        value={profileForm.role} 
+                        onChange={handleProfileFormChange}
+                      >
+                        <option value="Professional Filmmaker">Professional Filmmaker</option>
+                        <option value="Commercial Director">Commercial Director</option>
+                        <option value="Camera Assistant">Camera Assistant</option>
+                        <option value="Rental House Owner">Rental House Owner</option>
+                        <option value="Content Creator">Content Creator</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="form-row">
+                    <div className="form-field">
+                      <label>Company / Organization</label>
+                      <input 
+                        type="text" 
+                        name="company" 
+                        placeholder="e.g. Aura Media Kampala" 
+                        value={profileForm.company} 
+                        onChange={handleProfileFormChange} 
+                      />
+                    </div>
+                    <div className="form-field">
+                      <label>Location *</label>
+                      <input 
+                        type="text" 
+                        name="location" 
+                        placeholder="e.g. Kampala, UG" 
+                        value={profileForm.location} 
+                        onChange={handleProfileFormChange} 
+                        required 
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="form-sidebar-details">
+                  <div className="form-field">
+                    <label>Profile Avatar Emoji *</label>
+                    <select 
+                      name="avatar" 
+                      value={profileForm.avatar} 
+                      onChange={handleProfileFormChange}
+                      style={{ fontSize: '1.5rem', height: '54px' }}
+                    >
+                      <option value="🎥">🎥 Camera</option>
+                      <option value="🎬">🎬 Clapperboard</option>
+                      <option value="📸">📸 DSLR Camera</option>
+                      <option value="💡">💡 Lighting</option>
+                      <option value="🎧">🎧 Audio</option>
+                      <option value="⭐">⭐ Star</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="modal-footer">
+                <button type="button" className="btn-cancel" onClick={() => setIsCreateProfileModalOpen(false)}>
+                  Cancel
+                </button>
+                <button type="submit" className="btn-submit-listing">
+                  Create Profile
                 </button>
               </div>
             </form>
