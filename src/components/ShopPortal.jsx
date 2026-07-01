@@ -48,6 +48,184 @@ export default function ShopPortal() {
     return () => clearTimeout(timer);
   }, []);
 
+  // --- 1. Flash Sale state and timer ---
+  const [flashSaleTimeLeft, setFlashSaleTimeLeft] = useState(14400); // 4 hours
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setFlashSaleTimeLeft(prev => (prev > 0 ? prev - 1 : 14400));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const formatTime = (seconds) => {
+    const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
+    const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
+    const s = (seconds % 60).toString().padStart(2, '0');
+    return `${h}h ${m}m ${s}s`;
+  };
+
+  // --- 2. Tab selection ('buy' | 'bid') ---
+  const [shopTab, setShopTab] = useState('buy');
+
+  // --- 3. Favorites / Wishlist state ---
+  const [favorites, setFavorites] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('gearplug_favorites') || '[]');
+    } catch (e) {
+      return [];
+    }
+  });
+
+  const toggleFavorite = (productId) => {
+    setFavorites(prev => {
+      const next = prev.includes(productId) ? prev.filter(id => id !== productId) : [...prev, productId];
+      localStorage.setItem('gearplug_favorites', JSON.stringify(next));
+      return next;
+    });
+  };
+
+  // --- 4. Saved Searches / Filters state ---
+  const [savedFilters, setSavedFilters] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('gearplug_saved_filters') || '[]');
+    } catch (e) {
+      return [];
+    }
+  });
+
+  const saveCurrentFilter = () => {
+    if (!searchQuery && activeCategory === 'All') {
+      alert("Search query or category must be set to save a filter shortcut.");
+      return;
+    }
+    const filterName = searchQuery 
+      ? `"${searchQuery}" in ${activeCategory}` 
+      : `Category: ${activeCategory}`;
+      
+    const newFilter = {
+      id: `sf-${Date.now()}`,
+      category: activeCategory,
+      query: searchQuery,
+      name: filterName
+    };
+
+    setSavedFilters(prev => {
+      const next = [...prev, newFilter];
+      localStorage.setItem('gearplug_saved_filters', JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const applySavedFilter = (filter) => {
+    setActiveCategory(filter.category);
+    setSearchQuery(filter.query);
+  };
+
+  const deleteSavedFilter = (id) => {
+    setSavedFilters(prev => {
+      const next = prev.filter(f => f.id !== id);
+      localStorage.setItem('gearplug_saved_filters', JSON.stringify(next));
+      return next;
+    });
+  };
+
+  // --- 5. Bidding Session (Auctions) state ---
+  const INITIAL_AUCTIONS = [
+    {
+      id: 'auc-001',
+      name: 'Leica M6 Classic Rangefinder',
+      brand: 'Leica',
+      description: 'Stunning vintage analog camera in black chrome finish. Mechanical shutter, crisp viewfinder, pristine aesthetic condition.',
+      img: '/arri_alexa_1782843732555.png',
+      basePrice: 8500000,
+      currentBid: 9200000,
+      highestBidder: 'Kalyango David',
+      timeLeft: 7200 + 45, // 2 hours
+      bidsCount: 14,
+      minIncrement: 50000
+    },
+    {
+      id: 'auc-002',
+      name: 'Zeiss Otus 85mm f/1.4 Lens',
+      brand: 'Zeiss',
+      description: 'The ultimate portrait prime lens. Delivers medium-format detail and quality on full-frame cameras.',
+      img: '/zeiss_cp3_1782843751691.png',
+      basePrice: 12000000,
+      currentBid: 12450000,
+      highestBidder: 'Nsubuga Henry',
+      timeLeft: 18000 + 12, // 5 hours
+      bidsCount: 8,
+      minIncrement: 100000
+    }
+  ];
+
+  const [auctions, setAuctions] = useState(() => {
+    try {
+      const saved = localStorage.getItem('gearplug_auctions');
+      return saved ? JSON.parse(saved) : INITIAL_AUCTIONS;
+    } catch (e) {
+      return INITIAL_AUCTIONS;
+    }
+  });
+
+  const [bidInputs, setBidInputs] = useState({});
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setAuctions(prev => {
+        const ticked = prev.map(auc => ({
+          ...auc,
+          timeLeft: auc.timeLeft > 0 ? auc.timeLeft - 1 : 0
+        }));
+        return ticked;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const handleBidInputChange = (aucId, value) => {
+    setBidInputs(prev => ({ ...prev, [aucId]: value }));
+  };
+
+  const placeBid = (aucId) => {
+    const inputVal = bidInputs[aucId];
+    if (!inputVal) return;
+    const bidAmount = parseFloat(inputVal);
+    const target = auctions.find(a => a.id === aucId);
+    if (!target) return;
+    
+    if (target.timeLeft <= 0) {
+      alert("This auction session has ended!");
+      return;
+    }
+    
+    if (bidAmount < target.currentBid + target.minIncrement) {
+      alert(`Min bid required is UGX ${(target.currentBid + target.minIncrement).toLocaleString()}`);
+      return;
+    }
+    
+    const bidderName = prompt("Enter your name to place the bid:") || "Anonymous";
+    
+    setAuctions(prev => {
+      const next = prev.map(auc => {
+        if (auc.id === aucId) {
+          return {
+            ...auc,
+            currentBid: bidAmount,
+            highestBidder: bidderName,
+            bidsCount: auc.bidsCount + 1
+          };
+        }
+        return auc;
+      });
+      localStorage.setItem('gearplug_auctions', JSON.stringify(next));
+      return next;
+    });
+    
+    setBidInputs(prev => ({ ...prev, [aucId]: '' }));
+    alert("Bid registered successfully!");
+  };
+
   const filteredProducts = useMemo(() => {
     return products.filter(p => {
       const matchCat = activeCategory === 'All' || p.category === activeCategory;
@@ -406,6 +584,87 @@ export default function ShopPortal() {
         </a>
       </div>
 
+      {/* ── Flash Sale Banner ── */}
+      <div className="flash-sale-banner mb-8 shadow-premium">
+        <div className="flash-sale-content">
+          <div className="flash-badge-pulsing">⚡ FLASH SALE DEALS</div>
+          <h2>Kampala Cinema Equipment Flash Sale</h2>
+          <p className="flash-desc text-muted">Get premium brand-new equipment directly imported to Uganda at direct-to-customer sale pricing. Free Kampala Delivery.</p>
+          
+          <div className="flash-deals-row">
+            <div className="flash-deal-card">
+              <div className="deal-image">
+                <img src="/fx6_camera_1782841415607.png" alt="Sony FX6 Deal" />
+              </div>
+              <div className="deal-info">
+                <h3>Sony FX6 Cinema Camera (Body)</h3>
+                <div className="deal-prices">
+                  <span className="original-price">UGX 12,500,000</span>
+                  <span className="sale-price text-accent">UGX 9,990,000</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flash-deal-card">
+              <div className="deal-image">
+                <img src="/aputure_light_1782841503328.png" alt="Aputure 600d Deal" />
+              </div>
+              <div className="deal-info">
+                <h3>Aputure LS 600d Pro LED Light</h3>
+                <div className="deal-prices">
+                  <span className="original-price">UGX 5,500,000</span>
+                  <span className="sale-price text-accent">UGX 4,200,000</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flash-timer-sidebar">
+          <span className="timer-label">TIME REMAINING</span>
+          <div className="timer-clock">{formatTime(flashSaleTimeLeft)}</div>
+          <div className="timer-bar-bg">
+            <div className="timer-bar-fill" style={{ width: `${(flashSaleTimeLeft / 14400) * 100}%` }}></div>
+          </div>
+          <p className="timer-note">Taxes & customs included. Order today for free local delivery.</p>
+        </div>
+      </div>
+
+      {/* ── Saved Filters & Favorites Shortcuts ── */}
+      <div className="shop-shortcuts-row mb-6">
+        <div className="saved-searches-box">
+          <span className="shortcuts-title">Saved Searches:</span>
+          {savedFilters.length === 0 ? (
+            <span className="no-shortcuts text-muted">No saved searches. Use "Save Search" below to bookmark.</span>
+          ) : (
+            <div className="shortcuts-list">
+              {savedFilters.map(filter => (
+                <div key={filter.id} className="shortcut-chip">
+                  <button className="apply-btn" onClick={() => applySavedFilter(filter)}>{filter.name}</button>
+                  <button className="delete-btn" onClick={() => deleteSavedFilter(filter.id)}>×</button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="favorites-box">
+          <span className="shortcuts-title">Wishlist ({favorites.length}):</span>
+          {favorites.length === 0 ? (
+            <span className="no-shortcuts text-muted">No wishlisted items. Tap heart on products.</span>
+          ) : (
+            <div className="wishlist-previews">
+              {products.filter(p => favorites.includes(p.id)).slice(0, 4).map(fav => (
+                <div key={fav.id} className="mini-fav-item" title={fav.name} onClick={() => { setActiveCategory(fav.category); setSearchQuery(fav.name); }}>
+                  <img src={fav.img} alt={fav.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                </div>
+              ))}
+              {favorites.length > 4 && <span className="more-favs">+{favorites.length - 4}</span>}
+            </div>
+          )}
+        </div>
+      </div>
+
       <div className="shop-layout">
         {/* ── Left: Browse ── */}
         <div className="shop-browse">
@@ -419,81 +678,163 @@ export default function ShopPortal() {
             </button>
           </header>
 
-          <div className="shop-controls mb-8">
-            <div className="search-bar">
-              <Search size={18} />
-              <input 
-                type="text" 
-                placeholder="Search gear..." 
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-            <div className="category-chips">
-              {CATEGORIES.map(cat => (
-                <button 
-                  key={cat} 
-                  className={`chip ${activeCategory === cat ? 'active' : ''}`}
-                  onClick={() => setActiveCategory(cat)}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
+          {/* Shop Tabs */}
+          <div className="shop-tab-controls mb-8">
+            <button 
+              className={`shop-tab-btn ${shopTab === 'buy' ? 'active' : ''}`}
+              onClick={() => setShopTab('buy')}
+            >
+              🛒 Direct Buy
+            </button>
+            <button 
+              className={`shop-tab-btn ${shopTab === 'bid' ? 'active' : ''}`}
+              onClick={() => setShopTab('bid')}
+            >
+              🔨 Bidding Sessions (Live Auctions)
+            </button>
           </div>
 
-          <div className="shop-product-grid">
-            {loading ? (
-              <div className="loading-state">
-                <Loader2 className="animate-spin" size={40} />
-                <p>Fetching Gear Plug Inventory...</p>
-              </div>
-            ) : filteredProducts.length === 0 ? (
-              <div className="empty-state">
-                <p>No gear found matching your criteria.</p>
-              </div>
-            ) : (
-              filteredProducts.map(product => (
-                <div key={product.id} className="shop-item-card">
-                  <div className="item-visual">
-                    <img src={product.img} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px 8px 0 0' }} />
-                    {product.isMarketplace && (
-                      <span className="marketplace-badge">Marketplace</span>
-                    )}
-                  </div>
-                  <div className="item-meta">
-                    <div className="brand-row">
-                      <span className="item-brand">{product.brand}</span>
-                      {product.isMarketplace && (
-                        <span className="item-condition">{product.condition}</span>
-                      )}
+          {shopTab === 'bid' ? (
+            /* Live Auctions View */
+            <div className="shop-auctions-grid">
+              {auctions.map(auc => (
+                <div key={auc.id} className="auction-card shadow-premium">
+                  <div className="auction-visual">
+                    <img src={auc.img} alt={auc.name} />
+                    <div className="auction-time-badge">
+                      ⏱️ {auc.timeLeft > 0 ? formatTime(auc.timeLeft) : 'ENDED'}
                     </div>
-                    <h3>{product.name}</h3>
-                    <p className="item-desc">{product.description}</p>
+                  </div>
+                  
+                  <div className="auction-meta">
+                    <span className="item-brand">{auc.brand}</span>
+                    <h3>{auc.name}</h3>
+                    <p className="item-desc">{auc.description}</p>
                     
-                    {product.isMarketplace && (
-                      <div className="seller-card-info">
-                        <div className="seller-name">
-                          Seller: <strong>{product.seller.name}</strong>
-                        </div>
-                        <div className="seller-contact text-muted">
-                          <span>{product.seller.phone}</span>
-                          {product.seller.email && <span> | {product.seller.email}</span>}
-                        </div>
+                    <div className="bid-status-box">
+                      <div className="status-line">
+                        <span>Current High Bid:</span>
+                        <strong className="high-bid text-accent">UGX {auc.currentBid.toLocaleString()}</strong>
                       </div>
-                    )}
-                    
-                    <div className="item-footer">
-                      <span className="item-price">UGX {product.price.toLocaleString()}</span>
-                      <button className="add-btn-small" onClick={() => addToKit(product)}>
-                        ADD TO KIT
+                      <div className="status-line">
+                        <span>High Bidder:</span>
+                        <span className="bidder-name">{auc.highestBidder}</span>
+                      </div>
+                      <div className="status-line">
+                        <span>Total Bids Placed:</span>
+                        <span>{auc.bidsCount} bids</span>
+                      </div>
+                    </div>
+
+                    <div className="bid-action-form">
+                      <input 
+                        type="number" 
+                        placeholder={`Min: UGX ${(auc.currentBid + auc.minIncrement).toLocaleString()}`} 
+                        value={bidInputs[auc.id] || ''}
+                        onChange={(e) => handleBidInputChange(auc.id, e.target.value)}
+                        disabled={auc.timeLeft <= 0}
+                      />
+                      <button 
+                        onClick={() => placeBid(auc.id)}
+                        disabled={auc.timeLeft <= 0}
+                      >
+                        PLACE BID
                       </button>
                     </div>
                   </div>
                 </div>
-              ))
-            )}
-          </div>
+              ))}
+            </div>
+          ) : (
+            /* Direct Buy View (Regular Grid) */
+            <>
+              <div className="shop-controls mb-8">
+                <div className="search-bar">
+                  <Search size={18} />
+                  <input 
+                    type="text" 
+                    placeholder="Search gear..." 
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+                <button className="btn-save-filter" onClick={saveCurrentFilter}>
+                  💾 Save Search
+                </button>
+                <div className="category-chips">
+                  {CATEGORIES.map(cat => (
+                    <button 
+                      key={cat} 
+                      className={`chip ${activeCategory === cat ? 'active' : ''}`}
+                      onClick={() => setActiveCategory(cat)}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="shop-product-grid">
+                {loading ? (
+                  <div className="loading-state">
+                    <Loader2 className="animate-spin" size={40} />
+                    <p>Fetching Gear Plug Inventory...</p>
+                  </div>
+                ) : filteredProducts.length === 0 ? (
+                  <div className="empty-state">
+                    <p>No gear found matching your criteria.</p>
+                  </div>
+                ) : (
+                  filteredProducts.map(product => (
+                    <div key={product.id} className="shop-item-card">
+                      <div className="item-visual">
+                        <img src={product.img} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px 8px 0 0' }} />
+                        {product.isMarketplace && (
+                          <span className="marketplace-badge">Marketplace</span>
+                        )}
+                        <button 
+                          className={`favorite-toggle-btn ${favorites.includes(product.id) ? 'active' : ''}`}
+                          onClick={(e) => { e.stopPropagation(); toggleFavorite(product.id); }}
+                          title="Add to Wishlist"
+                        >
+                          ❤️
+                        </button>
+                      </div>
+                      <div className="item-meta">
+                        <div className="brand-row">
+                          <span className="item-brand">{product.brand}</span>
+                          {product.isMarketplace && (
+                            <span className="item-condition">{product.condition}</span>
+                          )}
+                        </div>
+                        <h3>{product.name}</h3>
+                        <p className="item-desc">{product.description}</p>
+                        
+                        {product.isMarketplace && (
+                          <div className="seller-card-info">
+                            <div className="seller-name">
+                              Seller: <strong>{product.seller.name}</strong>
+                            </div>
+                            <div className="seller-contact text-muted">
+                              <span>{product.seller.phone}</span>
+                              {product.seller.email && <span> | {product.seller.email}</span>}
+                            </div>
+                          </div>
+                        )}
+                        
+                        <div className="item-footer">
+                          <span className="item-price">UGX {product.price.toLocaleString()}</span>
+                          <button className="add-btn-small" onClick={() => addToKit(product)}>
+                            ADD TO KIT
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </>
+          )}
         </div>
 
         {/* ── Right: Sidebar Cart ── */}
