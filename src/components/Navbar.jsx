@@ -36,7 +36,7 @@ export default function Navbar() {
     <nav className="navbar">
       <div className="navbar-container">
         <a href="/" className="logo" onClick={() => setIsMenuOpen(false)}>
-          GEAR<span className="text-accent">PLUG</span>
+          <img src="/logo.png" alt="Gear Plug UG Logo" className="logo-img" />
         </a>
 
         {/* Mobile Menu Toggle */}
