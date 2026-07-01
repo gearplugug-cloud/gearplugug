@@ -8,7 +8,7 @@ import './ShopPortal.css';
 const CATEGORIES = ['All', 'Camera Bodies', 'Lenses', 'Sound Equipment', 'Accessories', 'Tripods & Lighting'];
 
 export default function ShopPortal() {
-  const { kitItems, totalCost, clearKit, addToKit, removeFromKit, products, addMarketplaceProduct, currentUser, changeUser, orders, addOrder, profiles, createProfile } = useKit();
+  const { kitItems, totalCost, clearKit, addToKit, removeFromKit, products, addMarketplaceProduct, currentUser, changeUser, orders, addOrder, profiles, createProfile, shopTab, setShopTab } = useKit();
   const [view, setView] = useState('browse'); // 'browse' | 'checkout' | 'success'
   
   // Profile creation modal and form state
