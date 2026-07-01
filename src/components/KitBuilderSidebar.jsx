@@ -56,7 +56,7 @@ export default function KitBuilderSidebar() {
                   </div>
                   <div className="item-details">
                     <span className="item-name">{item.name}</span>
-                    <span className="item-price">${item.price}/day</span>
+                    <span className="item-price">UGX {item.price.toLocaleString()}/day</span>
                   </div>
                   <div className="item-actions">
                     <CheckCircle size={16} color="var(--accent-color)" />
@@ -73,7 +73,7 @@ export default function KitBuilderSidebar() {
         <div className="kit-sidebar-footer">
           <div className="total-cost">
             <span>Estimated:</span>
-            <span className="cost-value">${totalCost}/day</span>
+            <span className="cost-value">UGX {totalCost.toLocaleString()}/day</span>
           </div>
           <button
             className="finalize-btn"

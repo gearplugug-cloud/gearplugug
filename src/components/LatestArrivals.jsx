@@ -3,11 +3,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import './LatestArrivals.css';
 
 const products = [
-  { id: 1, name: "Sony Alpha a7S III", price: "$3,498.00", img: "/sony_a7siii_1782844190950.png" },
-  { id: 2, name: "Canon RF 24-70mm f/2.8L", price: "$2,399.00", img: "/canon_lens_1782841425731.png" },
-  { id: 3, name: "DJI RS 3 Pro Gimbal", price: "$869.00", img: "/dji_gimbal_1782841445580.png" },
-  { id: 4, name: "Rode Wireless GO II", price: "$299.00", img: "/rode_wireless_1782841493569.png" },
-  { id: 5, name: "Sennheiser MKH 416", price: "$999.00", img: "/sennheiser_mic_1782841434894.png" }
+  { id: 1, name: "Sony Alpha a7S III", price: "UGX 13,000,000", img: "/sony_a7siii_1782844190950.png" },
+  { id: 2, name: "Canon RF 24-70mm f/2.8L", price: "UGX 8,900,000", img: "/canon_lens_1782841425731.png" },
+  { id: 3, name: "DJI RS 3 Pro Gimbal", price: "UGX 3,200,000", img: "/dji_gimbal_1782841445580.png" },
+  { id: 4, name: "Rode Wireless GO II", price: "UGX 1,100,000", img: "/rode_wireless_1782841493569.png" },
+  { id: 5, name: "Sennheiser MKH 416", price: "UGX 3,700,000", img: "/sennheiser_mic_1782841434894.png" }
 ];
 
 export default function LatestArrivals() {

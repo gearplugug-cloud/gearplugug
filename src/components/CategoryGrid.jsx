@@ -6,14 +6,14 @@ import { useKit } from '../context/KitContext';
 import './CategoryGrid.css';
 
 const gearItems = [
-  { id: 'cam-1', name: 'RED Komodo 6K', brand: 'RED', category: 'Camera Bodies', price: 250, img: '/red_komodo_1782843722635.png' },
-  { id: 'cam-2', name: 'ARRI Alexa Mini', brand: 'ARRI', category: 'Camera Bodies', price: 800, img: '/arri_alexa_1782843732555.png' },
-  { id: 'cam-3', name: 'Sony FX6', brand: 'Sony', category: 'Camera Bodies', price: 150, img: '/fx6_camera_1782841415607.png' },
-  { id: 'lens-1', name: 'Canon CN-E Prime Set', brand: 'Canon', category: 'Lenses', price: 300, img: '/canon_cne_1782843742546.png' },
-  { id: 'lens-2', name: 'Zeiss CP.3 35mm', brand: 'Zeiss', category: 'Lenses', price: 80, img: '/zeiss_cp3_1782843751691.png' },
-  { id: 'sound-1', name: 'Sennheiser MKH 416', brand: 'Sennheiser', category: 'Sound Equipment', price: 45, img: '/sennheiser_mic_1782841434894.png' },
-  { id: 'acc-1', name: 'V-Mount Battery 150Wh', brand: 'Core SWX', category: 'Accessories', price: 25, img: '/smallrig_battery_1782841513579.png' },
-  { id: 'tripod-1', name: 'Sachtler Video 18', brand: 'Sachtler', category: 'Tripods & Lighting', price: 65, img: '/manfrotto_tripod_1782841462760.png' },
+  { id: 'cam-1', name: 'RED Komodo 6K', brand: 'RED', category: 'Camera Bodies', price: 900000, img: '/red_komodo_1782843722635.png' },
+  { id: 'cam-2', name: 'ARRI Alexa Mini', brand: 'ARRI', category: 'Camera Bodies', price: 3000000, img: '/arri_alexa_1782843732555.png' },
+  { id: 'cam-3', name: 'Sony FX6', brand: 'Sony', category: 'Camera Bodies', price: 550000, img: '/fx6_camera_1782841415607.png' },
+  { id: 'lens-1', name: 'Canon CN-E Prime Set', brand: 'Canon', category: 'Lenses', price: 1100000, img: '/canon_cne_1782843742546.png' },
+  { id: 'lens-2', name: 'Zeiss CP.3 35mm', brand: 'Zeiss', category: 'Lenses', price: 300000, img: '/zeiss_cp3_1782843751691.png' },
+  { id: 'sound-1', name: 'Sennheiser MKH 416', brand: 'Sennheiser', category: 'Sound Equipment', price: 160000, img: '/sennheiser_mic_1782841434894.png' },
+  { id: 'acc-1', name: 'V-Mount Battery 150Wh', brand: 'Core SWX', category: 'Accessories', price: 90000, img: '/smallrig_battery_1782841513579.png' },
+  { id: 'tripod-1', name: 'Sachtler Video 18', brand: 'Sachtler', category: 'Tripods & Lighting', price: 240000, img: '/manfrotto_tripod_1782841462760.png' },
 ];
 
 const brands = ['All', 'RED', 'ARRI', 'Sony', 'Canon', 'Zeiss', 'Sennheiser', 'Core SWX', 'Sachtler'];
@@ -50,7 +50,7 @@ function DraggableGearCard({ item }) {
         <span className="gear-brand">{item.brand}</span>
         <h4>{item.name}</h4>
         <div className="gear-price-row">
-          <div className="gear-price">${item.price}/day</div>
+          <div className="gear-price">UGX {item.price.toLocaleString()}/day</div>
           <button className="add-text-btn" onClick={(e) => { e.stopPropagation(); addToKit(item); }}>
             <ShoppingCart size={14} /> Add
           </button>

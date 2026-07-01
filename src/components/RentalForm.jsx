@@ -18,13 +18,13 @@ export default function RentalForm() {
               {kitItems.map((item) => (
                 <li key={item.id} className="review-item">
                   <span>{item.name} ({item.brand})</span>
-                  <span>${item.price}</span>
+                  <span>UGX {item.price.toLocaleString()}</span>
                 </li>
               ))}
             </ul>
           )}
           <div className="review-total">
-            <strong>Estimated Total:</strong> <span style={{ color: 'var(--accent-color)' }}>${totalCost}/day</span>
+            <strong>Estimated Total:</strong> <span style={{ color: 'var(--accent-color)' }}>UGX {totalCost.toLocaleString()}/day</span>
           </div>
         </div>
 
