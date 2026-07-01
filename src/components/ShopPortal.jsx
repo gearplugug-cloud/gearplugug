@@ -344,7 +344,7 @@ export default function ShopPortal() {
 
     const newOrder = {
       id: `GP-${Date.now().toString(36).toUpperCase()}`,
-      customerId: currentUser.id,
+      customerId: currentUser?.id || 'guest',
       date: new Date().toISOString(),
       items: kitItems.map(item => ({ id: item.id, name: item.name, price: item.price })),
       total: totalCost,
@@ -738,9 +738,9 @@ export default function ShopPortal() {
             <button className="btn-list-gear" onClick={() => {
               setListingForm(prev => ({
                 ...prev,
-                sellerName: currentUser.name,
-                sellerPhone: currentUser.phone,
-                sellerEmail: currentUser.email || ''
+                sellerName: currentUser?.name || '',
+                sellerPhone: currentUser?.phone || '',
+                sellerEmail: currentUser?.email || ''
               }));
               setIsListingModalOpen(true);
             }}>
@@ -776,18 +776,18 @@ export default function ShopPortal() {
               {/* Profile Card / Header */}
               <div className="profile-hero-card shadow-premium">
                 <div className="profile-avatar-large">
-                  {currentUser.avatar}
+                  {currentUser?.avatar || '👤'}
                 </div>
                 <div className="profile-primary-details">
                   <div className="name-badge-row">
-                    <h2>{currentUser.name}</h2>
-                    <span className="user-role-badge">{currentUser.role}</span>
+                    <h2>{currentUser?.name || 'Anonymous'}</h2>
+                    <span className="user-role-badge">{currentUser?.role || 'Guest'}</span>
                   </div>
-                  <p className="user-org text-muted">{currentUser.company} • {currentUser.location}</p>
+                  <p className="user-org text-muted">{currentUser?.company || 'Freelancer'} • {currentUser?.location || 'Kampala'}</p>
                   
                   <div className="user-contact-pills">
-                    <span className="contact-pill"><Phone size={12} /> {currentUser.phone}</span>
-                    <span className="contact-pill"><Mail size={12} /> {currentUser.email}</span>
+                    <span className="contact-pill"><Phone size={12} /> {currentUser?.phone || 'No phone'}</span>
+                    <span className="contact-pill"><Mail size={12} /> {currentUser?.email || 'No email'}</span>
                   </div>
                 </div>
 
@@ -796,7 +796,7 @@ export default function ShopPortal() {
                   <label>Switch Profile Account:</label>
                   <div className="profile-switcher-row">
                     <select 
-                      value={currentUser.id} 
+                      value={currentUser?.id || ''} 
                       onChange={(e) => {
                         const selected = profiles.find(u => u.id === e.target.value);
                         if (selected) changeUser(selected);
@@ -825,21 +825,21 @@ export default function ShopPortal() {
                 <div className="stat-card shadow-premium">
                   <span className="stat-title">My Gear Listings</span>
                   <strong className="stat-number">
-                    {products.filter(p => p.sellerId === currentUser.id).length}
+                    {products.filter(p => p.sellerId === currentUser?.id).length}
                   </strong>
                   <span className="stat-note">Items listed for sale</span>
                 </div>
                 <div className="stat-card shadow-premium">
                   <span className="stat-title">Bids Placed</span>
                   <strong className="stat-number">
-                    {auctions.filter(a => a.highestBidder === currentUser.name).length}
+                    {auctions.filter(a => a.highestBidder === currentUser?.name).length}
                   </strong>
                   <span className="stat-note">Active auction sessions</span>
                 </div>
                 <div className="stat-card shadow-premium">
                   <span className="stat-title">Order History</span>
                   <strong className="stat-number">
-                    {orders.filter(o => o.customerId === currentUser.id).length}
+                    {orders.filter(o => o.customerId === currentUser?.id).length}
                   </strong>
                   <span className="stat-note">Completed purchases</span>
                 </div>
@@ -850,7 +850,7 @@ export default function ShopPortal() {
                 {/* Listings */}
                 <div className="dashboard-section shadow-premium">
                   <h3>My Gear for Sale</h3>
-                  {products.filter(p => p.sellerId === currentUser.id).length === 0 ? (
+                  {products.filter(p => p.sellerId === currentUser?.id).length === 0 ? (
                     <p className="no-data text-muted">You haven't listed any equipment yet. Click "+ List Your Gear" to sell.</p>
                   ) : (
                     <div className="dashboard-table-wrapper">
@@ -864,7 +864,7 @@ export default function ShopPortal() {
                           </tr>
                         </thead>
                         <tbody>
-                          {products.filter(p => p.sellerId === currentUser.id).map(prod => (
+                          {products.filter(p => p.sellerId === currentUser?.id).map(prod => (
                             <tr key={prod.id}>
                               <td className="table-gear-cell">
                                 <img src={prod.img} alt={prod.name} />
@@ -893,7 +893,7 @@ export default function ShopPortal() {
                 {/* Bidding Activity */}
                 <div className="dashboard-section shadow-premium mt-8">
                   <h3>Active Auction Bids</h3>
-                  {auctions.filter(a => a.highestBidder === currentUser.name).length === 0 ? (
+                  {auctions.filter(a => a.highestBidder === currentUser?.name).length === 0 ? (
                     <p className="no-data text-muted">No active bids. Switch to "Live Auctions" to start bidding!</p>
                   ) : (
                     <div className="dashboard-table-wrapper">
@@ -908,7 +908,7 @@ export default function ShopPortal() {
                         </thead>
                         <tbody>
                           {auctions.map(auc => {
-                            if (auc.highestBidder !== currentUser.name) return null;
+                            if (auc.highestBidder !== currentUser?.name) return null;
                             const isEnding = auc.timeLeft < 3600;
                             return (
                               <tr key={auc.id}>
@@ -940,7 +940,7 @@ export default function ShopPortal() {
                 {/* Orders History */}
                 <div className="dashboard-section shadow-premium mt-8">
                   <h3>Order History</h3>
-                  {orders.filter(o => o.customerId === currentUser.id).length === 0 ? (
+                  {orders.filter(o => o.customerId === currentUser?.id).length === 0 ? (
                     <p className="no-data text-muted">You have no past purchases.</p>
                   ) : (
                     <div className="dashboard-table-wrapper">
@@ -955,7 +955,7 @@ export default function ShopPortal() {
                           </tr>
                         </thead>
                         <tbody>
-                          {orders.filter(o => o.customerId === currentUser.id).map(ord => (
+                          {orders.filter(o => o.customerId === currentUser?.id).map(ord => (
                             <tr key={ord.id}>
                               <td className="font-mono text-xs">{ord.id}</td>
                               <td>{new Date(ord.date).toLocaleDateString()}</td>

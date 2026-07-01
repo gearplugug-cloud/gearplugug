@@ -8,10 +8,14 @@
 // server-side proxy, never in the browser. This env-based approach is the
 // interim step that keeps the secret out of GitHub. Any key that was previously
 // hardcoded must be regenerated in WooCommerce.
-const WC_URL = import.meta.env.VITE_WC_URL;
-const AUTH_TOKEN = import.meta.env.VITE_WC_AUTH;
+const WC_URL = (typeof import.meta !== 'undefined' && import.meta.env) ? import.meta.env.VITE_WC_URL : '';
+const AUTH_TOKEN = (typeof import.meta !== 'undefined' && import.meta.env) ? import.meta.env.VITE_WC_AUTH : '';
 
 export const getProducts = async () => {
+  if (!WC_URL || WC_URL.includes('your-store.example')) {
+    console.log('WooCommerce backend URL is not configured. Falling back to local data.');
+    return [];
+  }
   try {
     const response = await fetch(`${WC_URL}/products`, {
       headers: {
@@ -27,6 +31,10 @@ export const getProducts = async () => {
 };
 
 export const createOrder = async (cartItems, customerDetails = {}) => {
+  if (!WC_URL || WC_URL.includes('your-store.example')) {
+    console.log('WooCommerce backend URL is not configured. Creating local order.');
+    return null;
+  }
   try {
     // Map our cart items to WooCommerce line_items format
     const line_items = cartItems.map(item => ({

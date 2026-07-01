@@ -73,7 +73,8 @@ export const KitProvider = ({ children }) => {
   const [profiles, setProfiles] = useState(() => {
     try {
       const saved = localStorage.getItem('gearplug_profiles');
-      return saved ? JSON.parse(saved) : MOCK_USERS;
+      const parsed = saved ? JSON.parse(saved) : null;
+      return Array.isArray(parsed) ? parsed : MOCK_USERS;
     } catch (e) {
       return MOCK_USERS;
     }
@@ -82,8 +83,8 @@ export const KitProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(() => {
     try {
       const saved = localStorage.getItem('gearplug_current_user');
-      if (saved) return JSON.parse(saved);
-      return MOCK_USERS[0];
+      const parsed = saved ? JSON.parse(saved) : null;
+      return parsed && parsed.id && parsed.name ? parsed : MOCK_USERS[0];
     } catch (e) {
       return MOCK_USERS[0];
     }
@@ -122,7 +123,9 @@ export const KitProvider = ({ children }) => {
   // Orders/Purchases History State
   const [orders, setOrders] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem('gearplug_orders') || '[]');
+      const saved = localStorage.getItem('gearplug_orders');
+      const parsed = saved ? JSON.parse(saved) : null;
+      return Array.isArray(parsed) ? parsed : [];
     } catch (e) {
       return [];
     }
@@ -148,7 +151,8 @@ export const KitProvider = ({ children }) => {
       let customProducts = [];
       try {
         const saved = localStorage.getItem('gearplug_marketplace_products');
-        customProducts = saved ? JSON.parse(saved) : [];
+        const parsed = saved ? JSON.parse(saved) : null;
+        customProducts = Array.isArray(parsed) ? parsed : [];
       } catch (e) {
         console.error("Failed to load products from localStorage", e);
       }
@@ -181,12 +185,12 @@ export const KitProvider = ({ children }) => {
   const addMarketplaceProduct = (newProduct) => {
     const productWithSeller = {
       ...newProduct,
-      sellerId: currentUser.id,
+      sellerId: currentUser?.id || 'guest',
       seller: {
-        name: currentUser.name,
-        phone: currentUser.phone,
-        email: currentUser.email,
-        company: currentUser.company
+        name: currentUser?.name || 'Anonymous',
+        phone: currentUser?.phone || '',
+        email: currentUser?.email || '',
+        company: currentUser?.company || ''
       }
     };
     setProducts(prev => {

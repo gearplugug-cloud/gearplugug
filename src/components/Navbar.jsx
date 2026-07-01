@@ -42,7 +42,7 @@ export default function Navbar() {
         </a>
 
         <div className="nav-right-actions">
-          {currentUser && (
+          {currentUser && currentUser.name && (
             <button
               type="button"
               className="navbar-profile-btn"
@@ -53,8 +53,8 @@ export default function Navbar() {
               }}
               title={`View Profile: ${currentUser.name}`}
             >
-              <span className="navbar-profile-avatar">{currentUser.avatar}</span>
-              <span className="navbar-profile-name">{currentUser.name.split(' ')[0]}</span>
+              <span className="navbar-profile-avatar">{currentUser.avatar || '👤'}</span>
+              <span className="navbar-profile-name">{(currentUser.name || '').split(' ')[0]}</span>
             </button>
           )}
 
