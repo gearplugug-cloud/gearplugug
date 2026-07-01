@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
+import { useKit } from '../context/KitContext';
 import './Navbar.css';
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { currentUser, setShopTab } = useKit();
   const navigate = useNavigate();
   const location = useLocation();
   const onHome = location.pathname === '/';
@@ -39,14 +41,32 @@ export default function Navbar() {
           <img src="/logo.png" alt="Gear Plug UG Logo" className="logo-img" />
         </a>
 
-        {/* Mobile Menu Toggle */}
-        <button
-          className="mobile-toggle"
-          aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
-        >
-          {isMenuOpen ? <X size={28} /> : <Menu size={28} />}
-        </button>
+        <div className="nav-right-actions">
+          {currentUser && (
+            <button
+              type="button"
+              className="navbar-profile-btn"
+              onClick={() => {
+                setShopTab('profile');
+                navigate('/shop');
+                setIsMenuOpen(false);
+              }}
+              title={`View Profile: ${currentUser.name}`}
+            >
+              <span className="navbar-profile-avatar">{currentUser.avatar}</span>
+              <span className="navbar-profile-name">{currentUser.name.split(' ')[0]}</span>
+            </button>
+          )}
+
+          {/* Mobile Menu Toggle */}
+          <button
+            className="mobile-toggle"
+            aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+          >
+            {isMenuOpen ? <X size={28} /> : <Menu size={28} />}
+          </button>
+        </div>
 
         <div className={`nav-links ${isMenuOpen ? 'mobile-open' : ''}`}>
           <button

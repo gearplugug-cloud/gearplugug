@@ -97,6 +97,9 @@ export const KitProvider = ({ children }) => {
     }
   };
 
+  // Shared active shop tab state
+  const [shopTab, setShopTab] = useState('buy');
+
   const createProfile = (newProfile) => {
     setProfiles(prev => {
       const next = [...prev, newProfile];
@@ -237,6 +240,8 @@ export const KitProvider = ({ children }) => {
       addOrder,
       profiles,
       createProfile,
+      shopTab,
+      setShopTab,
     }}>
       {children}
 

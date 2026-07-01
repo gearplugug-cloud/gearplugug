@@ -112,3 +112,53 @@
     font-size: 1.5rem;
   }
 }
+
+/* ── Navbar Actions & Profile Badge ── */
+.nav-right-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  z-index: 1002;
+}
+
+.navbar-profile-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 102, 0, 0.05);
+  border: 1px solid rgba(255, 102, 0, 0.25);
+  padding: 6px 14px;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+  height: 40px;
+}
+
+.navbar-profile-btn:hover {
+  background: rgba(255, 102, 0, 0.15);
+  border-color: var(--accent-color);
+  transform: translateY(-1px);
+}
+
+.navbar-profile-avatar {
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.navbar-profile-name {
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.85rem;
+  font-family: 'Montserrat', sans-serif;
+}
+
+@media (max-width: 480px) {
+  .navbar-profile-name {
+    display: none; /* Hide name on small mobiles */
+  }
+  .navbar-profile-btn {
+    padding: 6px 10px;
+  }
+}

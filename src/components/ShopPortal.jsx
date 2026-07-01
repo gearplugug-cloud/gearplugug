@@ -76,8 +76,6 @@ export default function ShopPortal() {
     return `${h}h ${m}m ${s}s`;
   };
 
-  // --- 2. Tab selection ('buy' | 'bid') ---
-  const [shopTab, setShopTab] = useState('buy');
 
   // --- 3. Favorites / Wishlist state ---
   const [favorites, setFavorites] = useState(() => {
