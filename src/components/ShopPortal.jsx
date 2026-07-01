@@ -1,20 +1,33 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useKit } from '../context/KitContext';
 
-import { ArrowLeft, ShieldCheck, Truck, CreditCard, Smartphone, CheckCircle, Search, Filter, Loader2, X, Package, MapPin, User, Phone, Mail } from 'lucide-react';
-import SAMPLE_PRODUCTS from '../lib/sampleProducts';
+import { ArrowLeft, ShieldCheck, Truck, CreditCard, Smartphone, CheckCircle, Search, Filter, Loader2, X, Package, MapPin, User, Phone, Mail, Upload, Camera } from 'lucide-react';
 import './ShopPortal.css';
 
 const CATEGORIES = ['All', 'Camera Bodies', 'Lenses', 'Sound Equipment', 'Accessories', 'Tripods & Lighting'];
 
 export default function ShopPortal() {
-  const { kitItems, totalCost, clearKit, addToKit, removeFromKit } = useKit();
+  const { kitItems, totalCost, clearKit, addToKit, removeFromKit, products, addMarketplaceProduct } = useKit();
   const [view, setView] = useState('browse'); // 'browse' | 'checkout' | 'success'
   const [activeCategory, setActiveCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
-  const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
+
+  // Marketplace modal and form state
+  const [isListingModalOpen, setIsListingModalOpen] = useState(false);
+  const [listingForm, setListingForm] = useState({
+    name: '',
+    brand: '',
+    category: 'Camera Bodies',
+    condition: 'Excellent',
+    price: '',
+    description: '',
+    sellerName: '',
+    sellerPhone: '',
+    sellerEmail: '',
+    img: '',
+  });
 
   // Checkout form state
   const [form, setForm] = useState({
@@ -29,9 +42,7 @@ export default function ShopPortal() {
   });
 
   useEffect(() => {
-    // Use sample products directly — no WooCommerce dependency
     const timer = setTimeout(() => {
-      setProducts(SAMPLE_PRODUCTS);
       setLoading(false);
     }, 600); // short delay for UX
     return () => clearTimeout(timer);
@@ -45,6 +56,60 @@ export default function ShopPortal() {
       return matchCat && matchSearch;
     });
   }, [products, activeCategory, searchQuery]);
+
+  const handleListingFormChange = (e) => {
+    setListingForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setListingForm(prev => ({ ...prev, img: reader.result }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleListingSubmit = (e) => {
+    e.preventDefault();
+    if (!listingForm.name || !listingForm.brand || !listingForm.price || !listingForm.sellerName || !listingForm.sellerPhone) {
+      alert("Please fill in all required fields.");
+      return;
+    }
+    const newProduct = {
+      id: `mp-${Date.now()}`,
+      name: listingForm.name,
+      brand: listingForm.brand,
+      category: listingForm.category,
+      price: parseFloat(listingForm.price),
+      description: listingForm.description,
+      img: listingForm.img || '/fx6_camera_1782841415607.png',
+      condition: listingForm.condition,
+      seller: {
+        name: listingForm.sellerName,
+        phone: listingForm.sellerPhone,
+        email: listingForm.sellerEmail,
+      },
+      isMarketplace: true,
+    };
+    addMarketplaceProduct(newProduct);
+    setIsListingModalOpen(false);
+    // Reset form
+    setListingForm({
+      name: '',
+      brand: '',
+      category: 'Camera Bodies',
+      condition: 'Excellent',
+      price: '',
+      description: '',
+      sellerName: '',
+      sellerPhone: '',
+      sellerEmail: '',
+      img: '',
+    });
+  };
 
   const handleFormChange = (e) => {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -344,9 +409,14 @@ export default function ShopPortal() {
       <div className="shop-layout">
         {/* ── Left: Browse ── */}
         <div className="shop-browse">
-          <header className="mb-8">
-            <span className="section-label">Inventory Hub</span>
-            <h1 className="section-title">Browse Equipment</h1>
+          <header className="mb-8 shop-browse-header">
+            <div>
+              <span className="section-label">Inventory Hub</span>
+              <h1 className="section-title" style={{ marginBottom: 0 }}>Browse Equipment</h1>
+            </div>
+            <button className="btn-list-gear" onClick={() => setIsListingModalOpen(true)}>
+              + List Your Gear
+            </button>
           </header>
 
           <div className="shop-controls mb-8">
@@ -387,11 +457,32 @@ export default function ShopPortal() {
                 <div key={product.id} className="shop-item-card">
                   <div className="item-visual">
                     <img src={product.img} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px 8px 0 0' }} />
+                    {product.isMarketplace && (
+                      <span className="marketplace-badge">Marketplace</span>
+                    )}
                   </div>
                   <div className="item-meta">
-                    <span className="item-brand">{product.brand}</span>
+                    <div className="brand-row">
+                      <span className="item-brand">{product.brand}</span>
+                      {product.isMarketplace && (
+                        <span className="item-condition">{product.condition}</span>
+                      )}
+                    </div>
                     <h3>{product.name}</h3>
                     <p className="item-desc">{product.description}</p>
+                    
+                    {product.isMarketplace && (
+                      <div className="seller-card-info">
+                        <div className="seller-name">
+                          Seller: <strong>{product.seller.name}</strong>
+                        </div>
+                        <div className="seller-contact text-muted">
+                          <span>{product.seller.phone}</span>
+                          {product.seller.email && <span> | {product.seller.email}</span>}
+                        </div>
+                      </div>
+                    )}
+                    
                     <div className="item-footer">
                       <span className="item-price">UGX {product.price.toLocaleString()}</span>
                       <button className="add-btn-small" onClick={() => addToKit(product)}>
@@ -453,8 +544,185 @@ export default function ShopPortal() {
               <div className="trust-item"><Truck size={14} /> <span>Kampala Delivery</span></div>
             </div>
           </div>
-        </aside>
       </div>
+
+      {/* ── Marketplace Listing Modal ── */}
+      {isListingModalOpen && (
+        <div className="marketplace-modal-overlay">
+          <div className="marketplace-modal shadow-premium">
+            <button className="modal-close-btn" onClick={() => setIsListingModalOpen(false)}>
+              <X size={20} />
+            </button>
+            <div className="modal-header">
+              <Camera size={24} className="text-accent" />
+              <h2>List Your Camera Gear</h2>
+              <p className="text-muted">Fill in the details below to put your equipment up for sale in the marketplace.</p>
+            </div>
+            
+            <form onSubmit={handleListingSubmit} className="marketplace-form">
+              <div className="form-grid">
+                {/* Left side: details */}
+                <div className="form-main-details">
+                  <div className="form-row">
+                    <div className="form-field">
+                      <label>Equipment Name *</label>
+                      <input 
+                        type="text" 
+                        name="name" 
+                        placeholder="e.g. Sony a7 IV" 
+                        value={listingForm.name} 
+                        onChange={handleListingFormChange} 
+                        required 
+                      />
+                    </div>
+                    <div className="form-field">
+                      <label>Brand *</label>
+                      <input 
+                        type="text" 
+                        name="brand" 
+                        placeholder="e.g. Sony" 
+                        value={listingForm.brand} 
+                        onChange={handleListingFormChange} 
+                        required 
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="form-row">
+                    <div className="form-field">
+                      <label>Category *</label>
+                      <select 
+                        name="category" 
+                        value={listingForm.category} 
+                        onChange={handleListingFormChange}
+                      >
+                        <option value="Camera Bodies">Camera Bodies</option>
+                        <option value="Lenses">Lenses</option>
+                        <option value="Sound Equipment">Sound Equipment</option>
+                        <option value="Accessories">Accessories</option>
+                        <option value="Tripods & Lighting">Tripods & Lighting</option>
+                      </select>
+                    </div>
+                    <div className="form-field">
+                      <label>Condition *</label>
+                      <select 
+                        name="condition" 
+                        value={listingForm.condition} 
+                        onChange={handleListingFormChange}
+                      >
+                        <option value="New">New (Unopened)</option>
+                        <option value="Like New">Like New (Mint)</option>
+                        <option value="Excellent">Excellent Condition</option>
+                        <option value="Good">Good (Used)</option>
+                        <option value="Fair">Fair (Well Used)</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div className="form-row">
+                    <div className="form-field">
+                      <label>Price (UGX) *</label>
+                      <input 
+                        type="number" 
+                        name="price" 
+                        placeholder="e.g. 8500000" 
+                        value={listingForm.price} 
+                        onChange={handleListingFormChange} 
+                        required 
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="form-field full-width">
+                    <label>Description & Condition Notes</label>
+                    <textarea 
+                      name="description" 
+                      placeholder="Describe what's included, cosmetic condition, functionality..." 
+                      value={listingForm.description} 
+                      onChange={handleListingFormChange} 
+                      rows={3}
+                    />
+                  </div>
+                </div>
+                
+                {/* Right side: image upload & seller info */}
+                <div className="form-sidebar-details">
+                  <div className="form-field image-upload-field">
+                    <label>Product Photo</label>
+                    <div className="image-upload-zone">
+                      {listingForm.img ? (
+                        <div className="upload-preview">
+                          <img src={listingForm.img} alt="Preview" />
+                          <button type="button" className="remove-preview" onClick={() => setListingForm(prev => ({ ...prev, img: '' }))}>
+                            Change Photo
+                          </button>
+                        </div>
+                      ) : (
+                        <label className="upload-label">
+                          <Upload size={32} />
+                          <span>Click to upload image</span>
+                          <span className="text-muted text-xs">Supports JPG, PNG</span>
+                          <input 
+                            type="file" 
+                            accept="image/*" 
+                            onChange={handleImageUpload} 
+                            style={{ display: 'none' }} 
+                          />
+                        </label>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="seller-section">
+                    <h3>Seller Contact Details</h3>
+                    <div className="form-field">
+                      <label>Seller Name *</label>
+                      <input 
+                        type="text" 
+                        name="sellerName" 
+                        placeholder="Your full name" 
+                        value={listingForm.sellerName} 
+                        onChange={handleListingFormChange} 
+                        required 
+                      />
+                    </div>
+                    <div className="form-field">
+                      <label>Phone Number *</label>
+                      <input 
+                        type="tel" 
+                        name="sellerPhone" 
+                        placeholder="e.g. +256 701 234 567" 
+                        value={listingForm.sellerPhone} 
+                        onChange={handleListingFormChange} 
+                        required 
+                      />
+                    </div>
+                    <div className="form-field">
+                      <label>Email Address</label>
+                      <input 
+                        type="email" 
+                        name="sellerEmail" 
+                        placeholder="Optional" 
+                        value={listingForm.sellerEmail} 
+                        onChange={handleListingFormChange} 
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="modal-footer">
+                <button type="button" className="btn-cancel" onClick={() => setIsListingModalOpen(false)}>
+                  Cancel
+                </button>
+                <button type="submit" className="btn-submit-listing">
+                  Publish Listing
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

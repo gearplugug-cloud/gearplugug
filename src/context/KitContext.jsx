@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext, useCallback } from 'react';
+import SAMPLE_PRODUCTS from '../lib/sampleProducts';
 
 const KitContext = createContext();
 
@@ -43,6 +44,33 @@ export const KitProvider = ({ children }) => {
   const [kitItems, setKitItems]     = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [toasts, setToasts]         = useState([]);
+  
+  // Marketplace products state with localStorage persistence
+  const [products, setProducts] = useState(() => {
+    try {
+      const saved = localStorage.getItem('gearplug_marketplace_products');
+      const customProducts = saved ? JSON.parse(saved) : [];
+      return [...SAMPLE_PRODUCTS, ...customProducts];
+    } catch (e) {
+      console.error("Failed to load products from localStorage", e);
+      return SAMPLE_PRODUCTS;
+    }
+  });
+
+  const addMarketplaceProduct = (newProduct) => {
+    setProducts(prev => {
+      const updated = [...prev, newProduct];
+      try {
+        const saved = localStorage.getItem('gearplug_marketplace_products');
+        const customProducts = saved ? JSON.parse(saved) : [];
+        const newCustomList = [...customProducts, newProduct];
+        localStorage.setItem('gearplug_marketplace_products', JSON.stringify(newCustomList));
+      } catch (e) {
+        console.error("Failed to save product to localStorage", e);
+      }
+      return updated;
+    });
+  };
 
   /* ── Toast system ── */
   const showToast = useCallback((category, isMotivational = false, motivationalIndex = 0) => {
@@ -100,6 +128,8 @@ export const KitProvider = ({ children }) => {
       setIsCartOpen,
       toasts,
       showToast,
+      products,
+      addMarketplaceProduct,
     }}>
       {children}
 
