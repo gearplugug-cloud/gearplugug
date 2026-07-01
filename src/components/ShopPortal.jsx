@@ -544,6 +544,7 @@ export default function ShopPortal() {
               <div className="trust-item"><Truck size={14} /> <span>Kampala Delivery</span></div>
             </div>
           </div>
+        </aside>
       </div>
 
       {/* ── Marketplace Listing Modal ── */}
