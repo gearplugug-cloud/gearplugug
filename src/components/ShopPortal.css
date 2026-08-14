@@ -1993,3 +1993,713 @@
   border-color: var(--accent-color);
   box-shadow: 0 4px 15px rgba(255, 102, 0, 0.25);
 }
+
+/* ──────────────────────────────────────────────────────────
+   UNIFIED BROWSER LAYOUT (SIDEBAR FILTERS + MAIN RESULTS)
+   ────────────────────────────────────────────────────────── */
+.shop-unified-browser {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 32px;
+  align-items: start;
+  margin-top: 24px;
+}
+
+@media (max-width: 900px) {
+  .shop-unified-browser {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Sticky Sidebar Filters ── */
+.shop-filters-sidebar {
+  background: #080808;
+  border: 1px solid #141414;
+  border-radius: 16px;
+  padding: 24px;
+  position: sticky;
+  top: 100px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.sidebar-filter-section h3 {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #fff;
+  margin-bottom: 12px;
+  font-weight: 700;
+  border-bottom: 1px solid #141414;
+  padding-bottom: 8px;
+}
+
+/* Search Box inside Sidebar */
+.sidebar-search-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: #111;
+  border: 1px solid #222;
+  border-radius: 8px;
+}
+
+.sidebar-search-box input {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 0.75rem;
+  width: 100%;
+  outline: none;
+}
+
+.sidebar-search-box .search-icon {
+  color: var(--text-muted);
+}
+
+/* Filter Item lists */
+.filter-list,
+.filter-checkbox-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.filter-link-btn {
+  text-align: left;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  transition: all 0.2s;
+  width: 100%;
+  padding: 4px 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.filter-link-btn:hover,
+.filter-link-btn.active {
+  color: var(--accent-color);
+  transform: translateX(4px);
+}
+
+/* Custom Checkbox / Radio layout */
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.checkbox-label input {
+  accent-color: var(--accent-color);
+  cursor: pointer;
+}
+
+.checkbox-label:hover {
+  color: #fff;
+}
+
+/* Price Range */
+.price-range-inputs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.price-range-inputs input {
+  width: 100%;
+  background: #111;
+  border: 1px solid #222;
+  color: #fff;
+  border-radius: 8px;
+  padding: 8px;
+  font-size: 0.75rem;
+  outline: none;
+  text-align: center;
+}
+
+.price-range-inputs span {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+}
+
+.btn-clear-filters {
+  display: block;
+  width: 100%;
+  text-align: center;
+  background: rgba(255, 102, 0, 0.05);
+  border: 1px solid rgba(255, 102, 0, 0.2);
+  border-radius: 8px;
+  padding: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 700;
+}
+
+.btn-clear-filters:hover {
+  background: rgba(255, 102, 0, 0.15);
+  border-color: var(--accent-color);
+}
+
+/* ── Main Results Panel ── */
+.shop-results-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.results-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #111;
+  padding-bottom: 16px;
+}
+
+.view-mode-toggle {
+  display: flex;
+  background: #0c0c0c;
+  border: 1px solid #141414;
+  border-radius: 8px;
+  padding: 2px;
+}
+
+.view-toggle-btn {
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  transition: all 0.2s;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.view-toggle-btn.active {
+  background: #181818;
+  color: #fff;
+}
+
+/* ──────────────────────────────────────────────────────────
+   GRID AND LIST CARD DESIGNS (architectural look)
+   ────────────────────────────────────────────────────────── */
+/* Badges inside Visual Box */
+.format-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  z-index: 10;
+  text-transform: uppercase;
+}
+
+.badge-auction {
+  background: #111;
+  color: var(--accent-color);
+  border: 1px solid rgba(255, 102, 0, 0.3);
+}
+
+.badge-buynow {
+  background: var(--accent-color);
+  color: #000;
+}
+
+.condition-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  font-size: 0.6rem;
+  font-weight: 800;
+  background: rgba(0, 0, 0, 0.75);
+  border: 1px solid #222;
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  z-index: 10;
+  text-transform: uppercase;
+}
+
+/* Watchers & Ratings indicators */
+.watchers-badge {
+  font-size: 0.65rem;
+  background: rgba(255, 102, 0, 0.1);
+  color: var(--accent-color);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 700;
+}
+
+.auction-timer-tag {
+  font-size: 0.7rem;
+  font-weight: 700;
+  background: #000;
+  border: 1px solid #1a1a1a;
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 30px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Specifications horizontal tags in cards */
+.card-quick-specs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.spec-tag {
+  font-size: 0.65rem;
+  font-weight: 700;
+  background: #0f0f0f;
+  border: 1px solid #1a1a1a;
+  color: #bbb;
+  padding: 3px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Price Labeling */
+.price-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+}
+
+/* List Results Row View */
+.shop-product-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.shop-list-row {
+  display: grid;
+  grid-template-columns: 180px 1fr 180px;
+  background: #080808;
+  border: 1px solid #141414;
+  border-radius: 16px;
+  overflow: hidden;
+  transition: all 0.25s ease-out;
+  cursor: pointer;
+}
+
+.shop-list-row:hover {
+  border-color: #333;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+}
+
+.list-row-visual {
+  position: relative;
+  height: 100%;
+  min-height: 140px;
+  background: #0c0c0c;
+}
+
+.list-row-visual img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.list-row-content {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.list-row-content h3 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #fff;
+}
+
+.list-row-content .row-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.list-row-content .row-header .item-brand {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  color: var(--accent-color);
+  letter-spacing: 2px;
+  font-weight: 700;
+}
+
+.list-row-content .item-desc {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+  margin-bottom: 12px;
+  max-width: 600px;
+}
+
+.list-row-price-actions {
+  padding: 20px;
+  border-left: 1px solid #111;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+  text-align: right;
+  background: #060606;
+}
+
+.list-row-price-actions .price-tag-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.list-row-price-actions .item-price {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+.list-row-price-actions .bids-count-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.list-row-price-actions .auction-timer-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: #fff;
+  background: #111;
+  border: 1px solid #222;
+  padding: 8px 12px;
+  border-radius: 6px;
+}
+
+/* ──────────────────────────────────────────────────────────
+   SELECTED PRODUCT OVERLAY & DETAILS MODAL
+   ────────────────────────────────────────────────────────── */
+.selected-product-overlay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(15px);
+  z-index: 2000;
+}
+
+.selected-product-modal {
+  width: 1000px;
+  max-width: 95%;
+  max-height: 90vh;
+  overflow-y: auto;
+  border-radius: 20px;
+  background: #080808;
+  border: 1px solid #161616;
+  padding: 40px;
+  position: relative;
+  animation: modalScaleUp 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+@keyframes modalScaleUp {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.product-details-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 1.3fr;
+  gap: 40px;
+}
+
+@media (max-width: 768px) {
+  .product-details-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Hero visuals column */
+.product-hero-image-box {
+  width: 100%;
+  aspect-ratio: 4/3;
+  background: #0e0e0e;
+  border-radius: 12px;
+  border: 1px solid #141414;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.product-hero-image-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.product-guarantees-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.guarantee-card {
+  display: flex;
+  gap: 16px;
+  background: #0e0e0e;
+  border: 1px solid #141414;
+  padding: 16px;
+  border-radius: 10px;
+  align-items: flex-start;
+}
+
+.guarantee-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.guarantee-card strong {
+  display: block;
+  font-size: 0.82rem;
+  color: #fff;
+  margin-bottom: 2px;
+}
+
+/* Specifications Table */
+.specs-table-wrapper h3 {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #fff;
+  margin-bottom: 12px;
+  font-weight: 700;
+}
+
+.technical-specs-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+}
+
+.technical-specs-table tr {
+  border-bottom: 1px solid #121212;
+}
+
+.technical-specs-table tr:last-child {
+  border-bottom: none;
+}
+
+.spec-label-cell {
+  padding: 10px 0;
+  color: var(--text-muted);
+  font-weight: 600;
+  width: 40%;
+}
+
+.spec-value-cell {
+  padding: 10px 0;
+  color: #fff;
+  font-weight: 700;
+}
+
+/* AI Price spectrum indicator */
+.ai-price-trend-widget {
+  background: rgba(255, 102, 0, 0.02);
+  border: 1px solid rgba(255, 102, 0, 0.15);
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.ai-price-spectrum-bar {
+  display: flex;
+  height: 18px;
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+  margin-top: 12px;
+  margin-bottom: 12px;
+}
+
+.spectrum-segment {
+  flex: 1;
+  font-size: 0.6rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #000;
+}
+
+.segments-deal {
+  background: #2dd4bf; /* Greenish/Teal */
+}
+
+.segments-fair {
+  background: var(--accent-color); /* Amber/Orange */
+}
+
+.segments-premium {
+  background: #ef4444; /* Red */
+}
+
+.spectrum-pointer {
+  position: absolute;
+  top: -2px;
+  width: 4px;
+  height: 22px;
+  background: #fff;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+  border-radius: 2px;
+  transition: left 0.4s ease;
+}
+
+.ptr-deal { left: 16%; }
+.ptr-fair { left: 50%; }
+.ptr-premium { left: 83%; }
+
+/* Bidding ledger & checkout integration details */
+.auction-interaction-box,
+.buy-now-interaction-box {
+  background: #0a0a0a;
+  border: 1px solid #141414;
+  border-radius: 14px;
+  padding: 24px;
+}
+
+.interaction-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.current-bid-tag,
+.buy-price-tag {
+  font-size: 1.75rem;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1;
+}
+
+.timer-tag {
+  font-size: 1.25rem;
+  color: #fff;
+}
+
+.bid-form-row {
+  display: flex;
+  gap: 12px;
+}
+
+.modal-bid-input {
+  flex: 1;
+  background: #121212;
+  border: 1px solid #222;
+  border-radius: 8px;
+  padding: 14px;
+  color: #fff;
+  font-size: 0.85rem;
+  outline: none;
+  font-family: inherit;
+}
+
+.modal-bid-input:focus {
+  border-color: var(--accent-color);
+}
+
+.modal-bid-btn,
+.modal-buy-btn {
+  background: var(--accent-color);
+  color: #000;
+  font-weight: 800;
+  padding: 14px 28px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.25s;
+  border: none;
+}
+
+.modal-bid-btn:hover,
+.modal-buy-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(255, 102, 0, 0.35);
+}
+
+.buy-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Bids chronological list ledger */
+.bids-history-ledger h4 {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: #fff;
+  margin-bottom: 8px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.ledger-table-wrapper {
+  max-height: 180px;
+  overflow-y: auto;
+  border: 1px solid #141414;
+  border-radius: 8px;
+}
+
+.ledger-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.75rem;
+  text-align: left;
+}
+
+.ledger-table th {
+  background: #111;
+  color: var(--text-muted);
+  padding: 8px 12px;
+  font-weight: 700;
+  border-bottom: 1px solid #1c1c1c;
+}
+
+.ledger-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #111;
+  color: #fff;
+}
+
+.ledger-table tr.high-bid-row {
+  background: rgba(255, 102, 0, 0.04);
+}
+
+.ledger-table tr.high-bid-row td {
+  color: var(--accent-color);
+}

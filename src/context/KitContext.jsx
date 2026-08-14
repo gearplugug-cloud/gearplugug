@@ -100,7 +100,7 @@ export const KitProvider = ({ children }) => {
   };
 
   // Shared active shop tab state
-  const [shopTab, setShopTab] = useState('buy');
+  const [shopTab, setShopTab] = useState('all');
 
   const createProfile = (newProfile) => {
     setProfiles(prev => {

@@ -6,6 +6,9 @@ import { ArrowLeft, ShieldCheck, Truck, CreditCard, Smartphone, CheckCircle, Sea
 import './ShopPortal.css';
 
 const CATEGORIES = ['All', 'Camera Bodies', 'Lenses', 'Sound Equipment', 'Accessories', 'Tripods & Lighting'];
+const BRANDS = ['All', 'Sony', 'Canon', 'Leica', 'RED', 'ARRI', 'Blackmagic', 'DJI', 'Sigma', 'Zeiss', 'Rode', 'Sennheiser', 'Aputure', 'SmallRig', 'Manfrotto'];
+const CONDITIONS = ['All', 'Brand New', 'Open Box', 'Used - Mint', 'Used - Like New', 'Used - Good', 'Used - Fair'];
+const MOUNTS = ['All', 'Sony E-mount', 'Canon EF', 'Canon RF', 'ARRI PL', 'Leica M-mount', 'L-mount'];
 
 export default function ShopPortal() {
   const { kitItems, totalCost, clearKit, addToKit, removeFromKit, products, addMarketplaceProduct, currentUser, changeUser, orders, addOrder, profiles, createProfile, shopTab, setShopTab } = useKit();
@@ -24,6 +27,13 @@ export default function ShopPortal() {
   });
   const [activeCategory, setActiveCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [filterBrand, setFilterBrand] = useState('All');
+  const [filterCondition, setFilterCondition] = useState('All');
+  const [filterMount, setFilterMount] = useState('All');
+  const [filterMinPrice, setFilterMinPrice] = useState('');
+  const [filterMaxPrice, setFilterMaxPrice] = useState('');
+  const [viewMode, setViewMode] = useState('grid');
+  const [selectedProduct, setSelectedProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
 
@@ -146,6 +156,7 @@ export default function ShopPortal() {
       id: 'auc-001',
       name: 'Leica M6 Classic Rangefinder',
       brand: 'Leica',
+      category: 'Camera Bodies',
       description: 'Stunning vintage analog camera in black chrome finish. Mechanical shutter, crisp viewfinder, pristine aesthetic condition.',
       img: '/arri_alexa_1782843732555.png',
       basePrice: 8500000,
@@ -153,12 +164,29 @@ export default function ShopPortal() {
       highestBidder: 'Kalyango David',
       timeLeft: 7200 + 45, // 2 hours
       bidsCount: 14,
-      minIncrement: 50000
+      minIncrement: 50000,
+      condition: 'Used - Mint',
+      sellerRating: '4.9 ★ (156 reviews)',
+      watchers: 24,
+      specs: {
+        lensMount: 'Leica M-mount',
+        sensorSize: '35mm Film (Analog)',
+        maxResolution: 'Film format',
+        shutterCount: 'Approx. 8,500 shutter actuations',
+        inclusions: 'Leica leather strap, body cap, original red box, batteries'
+      },
+      bidsHistory: [
+        { bidder: 'Kalyango David', amount: 9200000, time: '12 minutes ago' },
+        { bidder: 'Emma Patrick', amount: 9150000, time: '34 minutes ago' },
+        { bidder: 'Nsubuga Henry', amount: 9000000, time: '1 hour ago' },
+        { bidder: 'Lwanga Samuel', amount: 8850000, time: '2 hours ago' }
+      ]
     },
     {
       id: 'auc-002',
-      name: 'Zeiss Otus 85mm f/1.4 Lens',
+      name: 'Zeiss Otus 85mm f/1.4 Lens (Canon EF)',
       brand: 'Zeiss',
+      category: 'Lenses',
       description: 'The ultimate portrait prime lens. Delivers medium-format detail and quality on full-frame cameras.',
       img: '/zeiss_cp3_1782843751691.png',
       basePrice: 12000000,
@@ -166,7 +194,22 @@ export default function ShopPortal() {
       highestBidder: 'Nsubuga Henry',
       timeLeft: 18000 + 12, // 5 hours
       bidsCount: 8,
-      minIncrement: 100000
+      minIncrement: 100000,
+      condition: 'Used - Like New',
+      sellerRating: '5.0 ★ (43 reviews)',
+      watchers: 18,
+      specs: {
+        lensMount: 'Canon EF',
+        focalLength: '85mm',
+        maxAperture: 'f/1.4',
+        glassCondition: 'Mint (Absolutely clean optics, zero haze)',
+        inclusions: 'Front/rear metal caps, metal lens hood, original cherry wood presentation box'
+      },
+      bidsHistory: [
+        { bidder: 'Nsubuga Henry', amount: 12450000, time: '18 minutes ago' },
+        { bidder: 'Kalyango David', amount: 12350000, time: '45 minutes ago' },
+        { bidder: 'Lwanga Samuel', amount: 12200000, time: '2 hours ago' }
+      ]
     }
   ];
 
@@ -220,11 +263,18 @@ export default function ShopPortal() {
     setAuctions(prev => {
       const next = prev.map(auc => {
         if (auc.id === aucId) {
+          const newBidLog = {
+            bidder: bidderName,
+            amount: bidAmount,
+            time: 'Just now'
+          };
+          const history = auc.bidsHistory ? [newBidLog, ...auc.bidsHistory] : [newBidLog];
           return {
             ...auc,
             currentBid: bidAmount,
             highestBidder: bidderName,
-            bidsCount: auc.bidsCount + 1
+            bidsCount: auc.bidsCount + 1,
+            bidsHistory: history
           };
         }
         return auc;
@@ -237,14 +287,45 @@ export default function ShopPortal() {
     alert("Bid registered successfully!");
   };
 
+  const unifiedCatalog = useMemo(() => {
+    const buyItems = products.map(p => ({ ...p, format: 'buy' }));
+    const bidItems = auctions.map(a => ({ ...a, format: 'bid', price: a.currentBid }));
+    return [...buyItems, ...bidItems];
+  }, [products, auctions]);
+
   const filteredProducts = useMemo(() => {
-    return products.filter(p => {
-      const matchCat = activeCategory === 'All' || p.category === activeCategory;
-      const matchSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          p.brand.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchCat && matchSearch;
+    return unifiedCatalog.filter(item => {
+      // 1. Format Filter
+      const matchFormat = shopTab === 'all' || item.format === shopTab;
+
+      // 2. Category Filter
+      const matchCat = activeCategory === 'All' || item.category === activeCategory;
+
+      // 3. Search Filter
+      const q = searchQuery.toLowerCase();
+      const matchSearch = !q || item.name.toLowerCase().includes(q) ||
+                          item.brand.toLowerCase().includes(q) ||
+                          (item.description && item.description.toLowerCase().includes(q));
+
+      // 4. Brand Filter
+      const matchBrand = filterBrand === 'All' || item.brand.toLowerCase() === filterBrand.toLowerCase();
+
+      // 5. Condition Filter
+      const matchCondition = filterCondition === 'All' || 
+                             (item.condition && item.condition.toLowerCase().includes(filterCondition.toLowerCase()));
+
+      // 6. Mount Filter
+      const matchMount = filterMount === 'All' || 
+                         (item.specs?.lensMount && item.specs.lensMount.toLowerCase().includes(filterMount.toLowerCase()));
+
+      // 7. Price Filter
+      const priceVal = item.price || item.currentBid || 0;
+      const matchMinPrice = !filterMinPrice || priceVal >= parseFloat(filterMinPrice);
+      const matchMaxPrice = !filterMaxPrice || priceVal <= parseFloat(filterMaxPrice);
+
+      return matchFormat && matchCat && matchSearch && matchBrand && matchCondition && matchMount && matchMinPrice && matchMaxPrice;
     });
-  }, [products, activeCategory, searchQuery]);
+  }, [unifiedCatalog, shopTab, activeCategory, searchQuery, filterBrand, filterCondition, filterMount, filterMinPrice, filterMaxPrice]);
 
   const handleListingFormChange = (e) => {
     setListingForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -299,6 +380,30 @@ export default function ShopPortal() {
     const sellerPayout = parseFloat(listingForm.price);
     const calculatedListingPrice = Math.round(sellerPayout / 0.8);
 
+    const specs = {};
+    if (listingForm.category === 'Camera Bodies') {
+      specs.lensMount = listingForm.lensMount || '';
+      specs.sensorSize = listingForm.sensorSize || '';
+      specs.maxResolution = listingForm.maxResolution || '';
+      specs.shutterCount = listingForm.shutterCount || '';
+    } else if (listingForm.category === 'Lenses') {
+      specs.lensMount = listingForm.lensMount || '';
+      specs.focalLength = listingForm.focalLength || '';
+      specs.maxAperture = listingForm.maxAperture || '';
+      specs.glassCondition = listingForm.glassCondition || '';
+    } else if (listingForm.category === 'Sound Equipment') {
+      specs.connectionType = listingForm.connectionType || '';
+      specs.polarPattern = listingForm.polarPattern || '';
+      specs.microphoneType = listingForm.microphoneType || '';
+    } else if (listingForm.category === 'Tripods & Lighting') {
+      specs.lightSource = listingForm.lightSource || '';
+      specs.colorTemp = listingForm.colorTemp || '';
+      specs.powerOutput = listingForm.powerOutput || '';
+    } else if (listingForm.category === 'Accessories') {
+      specs.loadCapacity = listingForm.loadCapacity || '';
+      specs.compatibility = listingForm.compatibility || '';
+    }
+
     const newProduct = {
       id: `mp-${Date.now()}`,
       name: listingForm.name,
@@ -309,6 +414,9 @@ export default function ShopPortal() {
       description: listingForm.description,
       img: listingForm.img || '/fx6_camera_1782841415607.png',
       condition: listingForm.condition,
+      specs: specs,
+      sellerRating: 'New Seller ★',
+      watchers: 1,
       seller: {
         name: listingForm.sellerName,
         phone: listingForm.sellerPhone,
@@ -330,6 +438,21 @@ export default function ShopPortal() {
       sellerPhone: '',
       sellerEmail: '',
       img: '',
+      lensMount: '',
+      sensorSize: '',
+      maxResolution: '',
+      shutterCount: '',
+      focalLength: '',
+      maxAperture: '',
+      glassCondition: '',
+      connectionType: '',
+      polarPattern: '',
+      microphoneType: '',
+      lightSource: '',
+      colorTemp: '',
+      powerOutput: '',
+      loadCapacity: '',
+      compatibility: '',
     });
   };
 
@@ -636,6 +759,156 @@ export default function ShopPortal() {
       </div>
     );
   }
+
+  const renderProductItem = (item, isListView) => {
+    const isAuction = item.format === 'bid';
+    const isFav = favorites.includes(item.id);
+    const displayPrice = isAuction ? item.currentBid : item.price;
+    
+    const quickSpecs = [];
+    if (item.specs) {
+      if (item.category === 'Camera Bodies') {
+        if (item.specs.lensMount) quickSpecs.push(item.specs.lensMount.replace(' mount', ''));
+        if (item.specs.sensorSize) quickSpecs.push(item.specs.sensorSize.split(' ')[0]);
+        if (item.specs.maxResolution) quickSpecs.push(item.specs.maxResolution);
+      } else if (item.category === 'Lenses') {
+        if (item.specs.lensMount) quickSpecs.push(item.specs.lensMount);
+        if (item.specs.focalLength) quickSpecs.push(item.specs.focalLength);
+        if (item.specs.maxAperture) quickSpecs.push(item.specs.maxAperture);
+      } else if (item.category === 'Sound Equipment') {
+        if (item.specs.microphoneType) quickSpecs.push(item.specs.microphoneType);
+        if (item.specs.connectionType) quickSpecs.push(item.specs.connectionType);
+      } else if (item.category === 'Tripods & Lighting') {
+        if (item.specs.lightSource) quickSpecs.push(item.specs.lightSource.split(' ')[0]);
+        if (item.specs.colorTemp) quickSpecs.push(item.specs.colorTemp);
+      } else {
+        if (item.specs.loadCapacity) quickSpecs.push(`Max ${item.specs.loadCapacity}`);
+      }
+    }
+    
+    if (isListView) {
+      return (
+        <div key={item.id} className="shop-list-row shadow-premium" onClick={() => setSelectedProduct(item)}>
+          <div className="list-row-visual">
+            <img src={item.img} alt={item.name} />
+            <span className={`format-badge ${isAuction ? 'badge-auction' : 'badge-buynow'}`}>
+              {isAuction ? '🔨 AUCTION' : '⚡ BUY IT NOW'}
+            </span>
+            {item.condition && <span className="condition-badge">{item.condition}</span>}
+          </div>
+          
+          <div className="list-row-content">
+            <div className="row-header">
+              <span className="item-brand">{item.brand} • {item.category}</span>
+              <button 
+                className={`favorite-toggle-btn ${isFav ? 'active' : ''}`}
+                onClick={(e) => { e.stopPropagation(); toggleFavorite(item.id); }}
+                title="Add to Wishlist"
+              >
+                ❤️
+              </button>
+            </div>
+            
+            <h3>{item.name}</h3>
+            <p className="item-desc">{item.description}</p>
+            
+            {quickSpecs.length > 0 && (
+              <div className="card-quick-specs">
+                {quickSpecs.map((tag, i) => (
+                  <span key={i} className="spec-tag">{tag}</span>
+                ))}
+              </div>
+            )}
+            
+            <div className="row-seller-trust text-xs text-muted mt-2">
+              <span className="trust-badge">⭐️ Top Rated Seller ({item.sellerRating || 'New'})</span>
+              {item.watchers && <span className="watchers-count"> • 🔥 {item.watchers} watching</span>}
+            </div>
+          </div>
+          
+          <div className="list-row-price-actions" onClick={(e) => e.stopPropagation()}>
+            <div className="price-tag-container" onClick={() => setSelectedProduct(item)}>
+              <span className="price-label">{isAuction ? 'Current Bid' : 'Price'}</span>
+              <strong className="item-price">UGX {displayPrice.toLocaleString()}</strong>
+              {isAuction && <span className="bids-count-label">{item.bidsCount || 0} bids</span>}
+            </div>
+            
+            {isAuction ? (
+              <div className="auction-timer-row" onClick={() => setSelectedProduct(item)}>
+                <span className="timer-icon">⏱️</span>
+                <span className="timer-text font-bold">{item.timeLeft > 0 ? formatTime(item.timeLeft) : 'ENDED'}</span>
+              </div>
+            ) : (
+              <button 
+                className="add-btn-small" 
+                onClick={() => addToKit(item)}
+              >
+                ADD TO KIT
+              </button>
+            )}
+          </div>
+        </div>
+      );
+    }
+    
+    // Grid mode rendering
+    return (
+      <div key={item.id} className="shop-item-card shadow-premium" onClick={() => setSelectedProduct(item)}>
+        <div className="item-visual">
+          <img src={item.img} alt={item.name} />
+          <span className={`format-badge ${isAuction ? 'badge-auction' : 'badge-buynow'}`}>
+            {isAuction ? '🔨 AUCTION' : '⚡ BUY IT NOW'}
+          </span>
+          {item.condition && <span className="condition-badge">{item.condition}</span>}
+          <button 
+            className={`favorite-toggle-btn ${isFav ? 'active' : ''}`}
+            onClick={(e) => { e.stopPropagation(); toggleFavorite(item.id); }}
+            title="Add to Wishlist"
+          >
+            ❤️
+          </button>
+        </div>
+        
+        <div className="item-meta">
+          <div className="brand-row">
+            <span className="item-brand">{item.brand} • {item.category}</span>
+            {item.watchers && <span className="watchers-badge">🔥 {item.watchers}</span>}
+          </div>
+          <h3>{item.name}</h3>
+          <p className="item-desc">{item.description}</p>
+          
+          {quickSpecs.length > 0 && (
+            <div className="card-quick-specs mb-4">
+              {quickSpecs.map((tag, i) => (
+                <span key={i} className="spec-tag">{tag}</span>
+              ))}
+            </div>
+          )}
+          
+          <div className="item-footer" onClick={(e) => e.stopPropagation()}>
+            <div className="price-block" onClick={() => setSelectedProduct(item)}>
+              <span className="price-label text-xs text-muted block">{isAuction ? 'Current Bid' : 'Price'}</span>
+              <span className="item-price font-bold">UGX {displayPrice.toLocaleString()}</span>
+              {isAuction && <span className="bids-count block text-xs text-muted">{item.bidsCount || 0} bids</span>}
+            </div>
+            
+            {isAuction ? (
+              <span className="auction-timer-tag" onClick={() => setSelectedProduct(item)}>
+                ⏱️ {item.timeLeft > 0 ? formatTime(item.timeLeft) : 'ENDED'}
+              </span>
+            ) : (
+              <button 
+                className="add-btn-small" 
+                onClick={() => addToKit(item)}
+              >
+                ADD TO KIT
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   /* ─────────────── BROWSE VIEW (default) ─────────────── */
   return (
@@ -977,146 +1250,180 @@ export default function ShopPortal() {
                 </div>
               </div>
             </div>
-          ) : shopTab === 'bid' ? (
-            /* Live Auctions View */
-            <div className="shop-auctions-grid">
-              {auctions.map(auc => (
-                <div key={auc.id} className="auction-card shadow-premium">
-                  <div className="auction-visual">
-                    <img src={auc.img} alt={auc.name} />
-                    <div className="auction-time-badge">
-                      ⏱️ {auc.timeLeft > 0 ? formatTime(auc.timeLeft) : 'ENDED'}
-                    </div>
+          ) : (
+            /* Unified eBay-style Search & Filter view with Sidebar */
+            <div className="shop-unified-browser">
+              {/* Sticky Sidebar Filter Panel */}
+              <aside className="shop-filters-sidebar shadow-premium">
+                <div className="sidebar-filter-section">
+                  <h3>Search & Save</h3>
+                  <div className="sidebar-search-box">
+                    <Search size={14} className="search-icon" />
+                    <input 
+                      type="text" 
+                      placeholder="Search items..." 
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                  </div>
+                  <button className="btn-save-filter mt-2" onClick={saveCurrentFilter}>
+                    💾 Save This Search
+                  </button>
+                </div>
+
+                <div className="sidebar-filter-section">
+                  <h3>Category</h3>
+                  <ul className="filter-list">
+                    {CATEGORIES.map(cat => (
+                      <li key={cat}>
+                        <button 
+                          className={`filter-link-btn ${activeCategory === cat ? 'active' : ''}`}
+                          onClick={() => setActiveCategory(cat)}
+                        >
+                          {cat === 'All' ? '📁 All Categories' : cat}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="sidebar-filter-section">
+                  <h3>Brand</h3>
+                  <ul className="filter-checkbox-list">
+                    {BRANDS.map(brand => (
+                      <li key={brand}>
+                        <label className="checkbox-label">
+                          <input 
+                            type="radio" 
+                            name="filter-brand"
+                            checked={filterBrand === brand}
+                            onChange={() => setFilterBrand(brand)}
+                          />
+                          <span>{brand}</span>
+                        </label>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="sidebar-filter-section">
+                  <h3>Condition</h3>
+                  <ul className="filter-checkbox-list">
+                    {CONDITIONS.map(cond => (
+                      <li key={cond}>
+                        <label className="checkbox-label">
+                          <input 
+                            type="radio" 
+                            name="filter-condition"
+                            checked={filterCondition === cond}
+                            onChange={() => setFilterCondition(cond)}
+                          />
+                          <span>{cond}</span>
+                        </label>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="sidebar-filter-section">
+                  <h3>Lens Mount</h3>
+                  <ul className="filter-checkbox-list">
+                    {MOUNTS.map(mnt => (
+                      <li key={mnt}>
+                        <label className="checkbox-label">
+                          <input 
+                            type="radio" 
+                            name="filter-mount"
+                            checked={filterMount === mnt}
+                            onChange={() => setFilterMount(mnt)}
+                          />
+                          <span>{mnt === 'All' ? 'All Mounts' : mnt.replace('Sony ', '').replace('ARRI ', '')}</span>
+                        </label>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="sidebar-filter-section">
+                  <h3>Price (UGX)</h3>
+                  <div className="price-range-inputs">
+                    <input 
+                      type="number" 
+                      placeholder="Min" 
+                      value={filterMinPrice}
+                      onChange={(e) => setFilterMinPrice(e.target.value)}
+                    />
+                    <span>to</span>
+                    <input 
+                      type="number" 
+                      placeholder="Max" 
+                      value={filterMaxPrice}
+                      onChange={(e) => setFilterMaxPrice(e.target.value)}
+                    />
+                  </div>
+                  {(filterMinPrice || filterMaxPrice || filterBrand !== 'All' || filterCondition !== 'All' || filterMount !== 'All' || searchQuery || activeCategory !== 'All') && (
+                    <button 
+                      className="btn-clear-filters text-accent text-xs mt-3"
+                      onClick={() => {
+                        setFilterBrand('All');
+                        setFilterCondition('All');
+                        setFilterMount('All');
+                        setFilterMinPrice('');
+                        setFilterMaxPrice('');
+                        setSearchQuery('');
+                        setActiveCategory('All');
+                      }}
+                    >
+                      🔄 Reset All Filters
+                    </button>
+                  )}
+                </div>
+              </aside>
+
+              {/* Main Results Panel */}
+              <div className="shop-results-panel">
+                <div className="results-toolbar mb-6">
+                  <div className="results-count-summary text-xs text-muted">
+                    <span className="count-number font-bold text-accent">{filteredProducts.length}</span> items found
+                    {searchQuery && <span> for "{searchQuery}"</span>}
                   </div>
                   
-                  <div className="auction-meta">
-                    <span className="item-brand">{auc.brand}</span>
-                    <h3>{auc.name}</h3>
-                    <p className="item-desc">{auc.description}</p>
-                    
-                    <div className="bid-status-box">
-                      <div className="status-line">
-                        <span>Current High Bid:</span>
-                        <strong className="high-bid text-accent">UGX {auc.currentBid.toLocaleString()}</strong>
-                      </div>
-                      <div className="status-line">
-                        <span>High Bidder:</span>
-                        <span className="bidder-name">{auc.highestBidder}</span>
-                      </div>
-                      <div className="status-line">
-                        <span>Total Bids Placed:</span>
-                        <span>{auc.bidsCount} bids</span>
-                      </div>
-                    </div>
-
-                    <div className="bid-action-form">
-                      <input 
-                        type="number" 
-                        placeholder={`Min: UGX ${(auc.currentBid + auc.minIncrement).toLocaleString()}`} 
-                        value={bidInputs[auc.id] || ''}
-                        onChange={(e) => handleBidInputChange(auc.id, e.target.value)}
-                        disabled={auc.timeLeft <= 0}
-                      />
-                      <button 
-                        onClick={() => placeBid(auc.id)}
-                        disabled={auc.timeLeft <= 0}
-                      >
-                        PLACE BID
-                      </button>
-                    </div>
+                  <div className="view-mode-toggle">
+                    <button 
+                      className={`view-toggle-btn ${viewMode === 'grid' ? 'active' : ''}`}
+                      onClick={() => setViewMode('grid')}
+                      title="Grid View"
+                    >
+                      Grid
+                    </button>
+                    <button 
+                      className={`view-toggle-btn ${viewMode === 'list' ? 'active' : ''}`}
+                      onClick={() => setViewMode('list')}
+                      title="List View"
+                    >
+                      List
+                    </button>
                   </div>
                 </div>
-              ))}
-            </div>
-          ) : (
-            /* Direct Buy View (Regular Grid) */
-            <>
-              <div className="shop-controls mb-8">
-                <div className="search-bar">
-                  <Search size={18} />
-                  <input 
-                    type="text" 
-                    placeholder="Search gear..." 
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
-                <button className="btn-save-filter" onClick={saveCurrentFilter}>
-                  💾 Save Search
-                </button>
-                <div className="category-chips">
-                  {CATEGORIES.map(cat => (
-                    <button 
-                      key={cat} 
-                      className={`chip ${activeCategory === cat ? 'active' : ''}`}
-                      onClick={() => setActiveCategory(cat)}
-                    >
-                      {cat}
-                    </button>
-                  ))}
-                </div>
-              </div>
 
-              <div className="shop-product-grid">
                 {loading ? (
                   <div className="loading-state">
                     <Loader2 className="animate-spin" size={40} />
-                    <p>Fetching Gear Plug Inventory...</p>
+                    <p>Scanning Gear Plug Database...</p>
                   </div>
                 ) : filteredProducts.length === 0 ? (
-                  <div className="empty-state">
-                    <p>No gear found matching your criteria.</p>
+                  <div className="empty-state shadow-premium">
+                    <Package size={48} className="text-muted mb-4" />
+                    <h3>No matching gear found</h3>
+                    <p className="text-muted">Try resetting your sidebar filters or adjusting your search term.</p>
                   </div>
                 ) : (
-                  filteredProducts.map(product => (
-                    <div key={product.id} className="shop-item-card">
-                      <div className="item-visual">
-                        <img src={product.img} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px 8px 0 0' }} />
-                        {product.isMarketplace && (
-                          <span className="marketplace-badge">Marketplace</span>
-                        )}
-                        <button 
-                          className={`favorite-toggle-btn ${favorites.includes(product.id) ? 'active' : ''}`}
-                          onClick={(e) => { e.stopPropagation(); toggleFavorite(product.id); }}
-                          title="Add to Wishlist"
-                        >
-                          ❤️
-                        </button>
-                      </div>
-                      <div className="item-meta">
-                        <div className="brand-row">
-                          <span className="item-brand">{product.brand}</span>
-                          {product.isMarketplace && (
-                            <span className="item-condition">{product.condition}</span>
-                          )}
-                        </div>
-                        <h3>{product.name}</h3>
-                        <p className="item-desc">{product.description}</p>
-                        
-                        {product.isMarketplace && (
-                          <div className="seller-card-info">
-                            <div className="seller-name">
-                              Seller: <strong>{product.seller.name}</strong>
-                            </div>
-                            <div className="seller-contact text-muted">
-                              <span>{product.seller.phone}</span>
-                              {product.seller.email && <span> | {product.seller.email}</span>}
-                            </div>
-                          </div>
-                        )}
-                        
-                        <div className="item-footer">
-                          <span className="item-price">UGX {product.price.toLocaleString()}</span>
-                          <button className="add-btn-small" onClick={() => addToKit(product)}>
-                            ADD TO KIT
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))
+                  <div className={viewMode === 'list' ? 'shop-product-list' : 'shop-product-grid'}>
+                    {filteredProducts.map(item => renderProductItem(item, viewMode === 'list'))}
+                  </div>
                 )}
               </div>
-            </>
+            </div>
           )}
         </div>
 
@@ -1242,6 +1549,100 @@ export default function ShopPortal() {
                         <option value="Fair">Fair (Well Used)</option>
                       </select>
                     </div>
+                  </div>
+                  
+                  {/* Dynamic Technical Specs section based on category */}
+                  <div className="dynamic-specs-section mb-6">
+                    <h3 className="section-subtitle-small text-accent text-xs mb-3 font-bold uppercase tracking-wider">🛠️ Technical Specifications</h3>
+                    
+                    {listingForm.category === 'Camera Bodies' && (
+                      <div className="form-row">
+                        <div className="form-field">
+                          <label>Lens Mount</label>
+                          <input type="text" name="lensMount" placeholder="e.g. Sony E-mount" value={listingForm.lensMount || ''} onChange={handleListingFormChange} />
+                        </div>
+                        <div className="form-field">
+                          <label>Sensor Size</label>
+                          <input type="text" name="sensorSize" placeholder="e.g. Full Frame" value={listingForm.sensorSize || ''} onChange={handleListingFormChange} />
+                        </div>
+                        <div className="form-field">
+                          <label>Max Resolution</label>
+                          <input type="text" name="maxResolution" placeholder="e.g. 4K 120p" value={listingForm.maxResolution || ''} onChange={handleListingFormChange} />
+                        </div>
+                        <div className="form-field">
+                          <label>Shutter Count / Hours</label>
+                          <input type="text" name="shutterCount" placeholder="e.g. 450 hours" value={listingForm.shutterCount || ''} onChange={handleListingFormChange} />
+                        </div>
+                      </div>
+                    )}
+                    
+                    {listingForm.category === 'Lenses' && (
+                      <div className="form-row">
+                        <div className="form-field">
+                          <label>Lens Mount</label>
+                          <input type="text" name="lensMount" placeholder="e.g. Canon RF" value={listingForm.lensMount || ''} onChange={handleListingFormChange} />
+                        </div>
+                        <div className="form-field">
+                          <label>Focal Length</label>
+                          <input type="text" name="focalLength" placeholder="e.g. 24-70mm" value={listingForm.focalLength || ''} onChange={handleListingFormChange} />
+                        </div>
+                        <div className="form-field">
+                          <label>Max Aperture</label>
+                          <input type="text" name="maxAperture" placeholder="e.g. f/2.8" value={listingForm.maxAperture || ''} onChange={handleListingFormChange} />
+                        </div>
+                        <div className="form-field">
+                          <label>Glass Condition</label>
+                          <input type="text" name="glassCondition" placeholder="e.g. Mint, no scratches" value={listingForm.glassCondition || ''} onChange={handleListingFormChange} />
+                        </div>
+                      </div>
+                    )}
+
+                    {listingForm.category === 'Sound Equipment' && (
+                      <div className="form-row">
+                        <div className="form-field">
+                          <label>Connection Type</label>
+                          <input type="text" name="connectionType" placeholder="e.g. XLR 3-pin" value={listingForm.connectionType || ''} onChange={handleListingFormChange} />
+                        </div>
+                        <div className="form-field">
+                          <label>Polar Pattern</label>
+                          <input type="text" name="polarPattern" placeholder="e.g. Supercardioid" value={listingForm.polarPattern || ''} onChange={handleListingFormChange} />
+                        </div>
+                        <div className="form-field">
+                          <label>Microphone Type</label>
+                          <input type="text" name="microphoneType" placeholder="e.g. Shotgun Condenser" value={listingForm.microphoneType || ''} onChange={handleListingFormChange} />
+                        </div>
+                      </div>
+                    )}
+
+                    {listingForm.category === 'Tripods & Lighting' && (
+                      <div className="form-row">
+                        <div className="form-field">
+                          <label>Light Source</label>
+                          <input type="text" name="lightSource" placeholder="e.g. 600W COB LED" value={listingForm.lightSource || ''} onChange={handleListingFormChange} />
+                        </div>
+                        <div className="form-field">
+                          <label>Color Temp</label>
+                          <input type="text" name="colorTemp" placeholder="e.g. 5600K" value={listingForm.colorTemp || ''} onChange={handleListingFormChange} />
+                        </div>
+                        <div className="form-field">
+                          <label>Power Output</label>
+                          <input type="text" name="powerOutput" placeholder="e.g. 600W" value={listingForm.powerOutput || ''} onChange={handleListingFormChange} />
+                        </div>
+                      </div>
+                    )}
+
+                    {listingForm.category === 'Accessories' && (
+                      <div className="form-row">
+                        <div className="form-field">
+                          <label>Load Capacity</label>
+                          <input type="text" name="loadCapacity" placeholder="e.g. 4.5 kg" value={listingForm.loadCapacity || ''} onChange={handleListingFormChange} />
+                        </div>
+                        <div className="form-field">
+                          <label>Compatibility</label>
+                          <input type="text" name="compatibility" placeholder="e.g. RED, Canon" value={listingForm.compatibility || ''} onChange={handleListingFormChange} />
+                        </div>
+                      </div>
+                    )}
                   </div>
                   
                   <div className="form-row">
@@ -1508,6 +1909,215 @@ export default function ShopPortal() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Item Details & Specs Modal (eBay Style) ── */}
+      {selectedProduct && (
+        <div className="marketplace-modal-overlay selected-product-overlay" onClick={() => setSelectedProduct(null)}>
+          <div className="marketplace-modal selected-product-modal shadow-premium" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close-btn" onClick={() => setSelectedProduct(null)}>
+              <X size={20} />
+            </button>
+            
+            <div className="product-details-grid">
+              {/* Left Column: Visuals & Guarantees */}
+              <div className="product-visuals-col">
+                <div className="product-hero-image-box">
+                  <img src={selectedProduct.img} alt={selectedProduct.name} />
+                  <span className={`format-badge ${selectedProduct.format === 'bid' ? 'badge-auction' : 'badge-buynow'}`}>
+                    {selectedProduct.format === 'bid' ? '🔨 AUCTION' : '⚡ BUY IT NOW'}
+                  </span>
+                </div>
+                
+                <div className="product-guarantees-list mt-6">
+                  <div className="guarantee-card">
+                    <span className="guarantee-icon">🛡️</span>
+                    <div>
+                      <strong>Escrow Security Guarantee</strong>
+                      <p className="text-muted text-xs">Your payment is held securely by Gear Plug until gear inspection is complete.</p>
+                    </div>
+                  </div>
+                  <div className="guarantee-card">
+                    <span className="guarantee-icon">🔍</span>
+                    <div>
+                      <strong>24-Hour Inspection Window</strong>
+                      <p className="text-muted text-xs">Verify sensor, optical clarity, or audio channels. Reject if not as described.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Right Column: Title, Specs, Bidding, AI Trend */}
+              <div className="product-details-col">
+                <div className="details-header mb-4">
+                  <div className="category-breadcrumbs text-xs text-muted mb-2">
+                    Shop &gt; {selectedProduct.category} &gt; {selectedProduct.brand}
+                  </div>
+                  <h2>{selectedProduct.name}</h2>
+                  <div className="seller-rating-line text-xs text-muted">
+                    Condition: <strong className="text-white">{selectedProduct.condition || 'Used'}</strong> 
+                    {selectedProduct.sellerRating && <span> • ⭐️ {selectedProduct.sellerRating}</span>}
+                    {selectedProduct.watchers && <span> • 🔥 {selectedProduct.watchers} watchers in 24h</span>}
+                  </div>
+                </div>
+
+                <p className="item-description-text mb-6">{selectedProduct.description}</p>
+                
+                {/* Specs Table */}
+                {selectedProduct.specs && (
+                  <div className="specs-table-wrapper mb-6">
+                    <h3>Specifications</h3>
+                    <table className="technical-specs-table">
+                      <tbody>
+                        {Object.entries(selectedProduct.specs).map(([key, value]) => {
+                          if (!value) return null;
+                          const label = key
+                            .replace(/([A-Z])/g, ' $1')
+                            .replace(/^./, (str) => str.toUpperCase());
+                          return (
+                            <tr key={key}>
+                              <td className="spec-label-cell">{label}</td>
+                              <td className="spec-value-cell">{value}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                {/* AI Price Positioner bar */}
+                <div className="ai-price-trend-widget mb-6">
+                  <div className="ai-widget-header mb-2 text-xs">
+                    <span>✨ AI Valuation Feedback</span>
+                    <span className="font-bold text-accent">Gear Plug Verified</span>
+                  </div>
+                  
+                  <div className="ai-price-spectrum-bar">
+                    <div className="spectrum-segment segments-deal">Great Deal</div>
+                    <div className="spectrum-segment segments-fair">Fair Price</div>
+                    <div className="spectrum-segment segments-premium">Premium Rig</div>
+                    
+                    <div 
+                      className={`spectrum-pointer ${
+                        selectedProduct.price > 10000000 
+                          ? 'ptr-premium' 
+                          : selectedProduct.price < 2000000 
+                          ? 'ptr-deal' 
+                          : 'ptr-fair'
+                      }`}
+                    />
+                  </div>
+                  
+                  <p className="ai-insight-copy mt-2 text-xs text-muted">
+                    {selectedProduct.category === 'Camera Bodies' 
+                      ? 'Camera bodies in Uganda hold strong demand. Escrow inspect window ensures safety for sensor checks.' 
+                      : selectedProduct.category === 'Lenses'
+                      ? 'Optics holds stable value. AI recommends inspecting front and rear elements for scratches on delivery.'
+                      : 'Media support and accessories pricing matches Kampala marketplace averages.'}
+                  </p>
+                </div>
+
+                {/* Bidding vs Direct Buy Box */}
+                {selectedProduct.format === 'bid' ? (
+                  /* Auction details & form */
+                  <div className="auction-interaction-box shadow-premium">
+                    <div className="interaction-header mb-4">
+                      <div>
+                        <span className="text-xs text-muted block">Current Bid</span>
+                        <strong className="current-bid-tag text-accent">UGX {selectedProduct.currentBid.toLocaleString()}</strong>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-xs text-muted block">Time Remaining</span>
+                        <strong className="timer-tag">{selectedProduct.timeLeft > 0 ? formatTime(selectedProduct.timeLeft) : 'ENDED'}</strong>
+                      </div>
+                    </div>
+
+                    <div className="bid-form-row mb-4">
+                      <input 
+                        type="number" 
+                        placeholder={`Enter UGX ${(selectedProduct.currentBid + selectedProduct.minIncrement).toLocaleString()} or more`}
+                        value={bidInputs[selectedProduct.id] || ''}
+                        onChange={(e) => handleBidInputChange(selectedProduct.id, e.target.value)}
+                        disabled={selectedProduct.timeLeft <= 0}
+                        className="modal-bid-input"
+                      />
+                      <button 
+                        className="modal-bid-btn"
+                        onClick={() => {
+                          placeBid(selectedProduct.id);
+                          setTimeout(() => {
+                            const updated = JSON.parse(localStorage.getItem('gearplug_auctions') || '[]').find(a => a.id === selectedProduct.id);
+                            if (updated) setSelectedProduct({ ...updated, format: 'bid' });
+                          }, 100);
+                        }}
+                        disabled={selectedProduct.timeLeft <= 0}
+                      >
+                        PLACE BID
+                      </button>
+                    </div>
+
+                    {/* Bidding History ledger table */}
+                    {selectedProduct.bidsHistory && selectedProduct.bidsHistory.length > 0 && (
+                      <div className="bids-history-ledger mt-6">
+                        <h4>Bidding History ({selectedProduct.bidsCount || 0} bids)</h4>
+                        <div className="ledger-table-wrapper">
+                          <table className="ledger-table">
+                            <thead>
+                              <tr>
+                                <th>Bidder</th>
+                                <th>Amount</th>
+                                <th>Time</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {selectedProduct.bidsHistory.map((bid, i) => (
+                                <tr key={i} className={i === 0 ? 'high-bid-row' : ''}>
+                                  <td>{bid.bidder.replace(/^(.).*(.)$/, '$1***$2')} {i === 0 && '👑'}</td>
+                                  <td className="font-bold">UGX {bid.amount.toLocaleString()}</td>
+                                  <td className="text-muted">{bid.time}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  /* Direct Buy Checkout Box */
+                  <div className="buy-now-interaction-box shadow-premium">
+                    <div className="buy-row">
+                      <div>
+                        <span className="text-xs text-muted block">Buy It Now Price</span>
+                        <strong className="buy-price-tag text-accent">UGX {selectedProduct.price.toLocaleString()}</strong>
+                      </div>
+                      <button 
+                        className="modal-buy-btn"
+                        onClick={() => {
+                          addToKit(selectedProduct);
+                          setSelectedProduct(null);
+                        }}
+                      >
+                        ADD TO KIT
+                      </button>
+                    </div>
+                    
+                    {selectedProduct.seller && (
+                      <div className="seller-contact-details mt-4 pt-4 border-t border-gray">
+                        <span className="text-xs text-muted block mb-1">Listed By Seller</span>
+                        <strong>👤 {selectedProduct.seller.name}</strong>
+                        <div className="text-xs text-muted mt-1">
+                          📞 {selectedProduct.seller.phone} {selectedProduct.seller.email && ` | ✉️ ${selectedProduct.seller.email}`}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       )}
