@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useKit } from '../context/KitContext';
-import { createOrder as createWooCommerceOrder } from '../lib/woocommerce';
+import { createOrder as createWooCommerceOrder, createProduct as createWooCommerceProduct } from '../lib/woocommerce';
 
 import { ArrowLeft, ShieldCheck, Truck, CreditCard, Smartphone, CheckCircle, Search, Filter, Loader2, X, Package, MapPin, User, Phone, Mail, Upload, Camera } from 'lucide-react';
 import './ShopPortal.css';
@@ -69,6 +69,17 @@ export default function ShopPortal() {
       setLoading(false);
     }, 600); // short delay for UX
     return () => clearTimeout(timer);
+  }, []);
+
+  // Dynamically load Flutterwave Checkout SDK script
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://checkout.flutterwave.com/v3.js';
+    script.async = true;
+    document.body.appendChild(script);
+    return () => {
+      document.body.removeChild(script);
+    };
   }, []);
 
   // --- 1. Flash Sale state and timer ---
@@ -377,117 +388,214 @@ export default function ShopPortal() {
       alert("Please fill in all required fields.");
       return;
     }
-    const sellerPayout = parseFloat(listingForm.price);
-    const calculatedListingPrice = Math.round(sellerPayout / 0.8);
 
-    const specs = {};
-    if (listingForm.category === 'Camera Bodies') {
-      specs.lensMount = listingForm.lensMount || '';
-      specs.sensorSize = listingForm.sensorSize || '';
-      specs.maxResolution = listingForm.maxResolution || '';
-      specs.shutterCount = listingForm.shutterCount || '';
-    } else if (listingForm.category === 'Lenses') {
-      specs.lensMount = listingForm.lensMount || '';
-      specs.focalLength = listingForm.focalLength || '';
-      specs.maxAperture = listingForm.maxAperture || '';
-      specs.glassCondition = listingForm.glassCondition || '';
-    } else if (listingForm.category === 'Sound Equipment') {
-      specs.connectionType = listingForm.connectionType || '';
-      specs.polarPattern = listingForm.polarPattern || '';
-      specs.microphoneType = listingForm.microphoneType || '';
-    } else if (listingForm.category === 'Tripods & Lighting') {
-      specs.lightSource = listingForm.lightSource || '';
-      specs.colorTemp = listingForm.colorTemp || '';
-      specs.powerOutput = listingForm.powerOutput || '';
-    } else if (listingForm.category === 'Accessories') {
-      specs.loadCapacity = listingForm.loadCapacity || '';
-      specs.compatibility = listingForm.compatibility || '';
+    const flwKey = import.meta.env.VITE_FLUTTERWAVE_PUBLIC_KEY || '';
+    if (!flwKey) {
+      alert("Flutterwave configuration is missing. Please add VITE_FLUTTERWAVE_PUBLIC_KEY to your environment/repository secrets.");
+      return;
     }
 
-    const newProduct = {
-      id: `mp-${Date.now()}`,
-      name: listingForm.name,
-      brand: listingForm.brand,
-      category: listingForm.category,
-      price: calculatedListingPrice,
-      sellerPayout: sellerPayout,
-      description: listingForm.description,
-      img: listingForm.img || '/fx6_camera_1782841415607.png',
-      condition: listingForm.condition,
-      specs: specs,
-      sellerRating: 'New Seller ★',
-      watchers: 1,
-      seller: {
-        name: listingForm.sellerName,
-        phone: listingForm.sellerPhone,
-        email: listingForm.sellerEmail,
-      },
-      isMarketplace: true,
-    };
-    addMarketplaceProduct(newProduct);
-    setIsListingModalOpen(false);
-    // Reset form
-    setListingForm({
-      name: '',
-      brand: '',
-      category: 'Camera Bodies',
-      condition: 'Excellent',
-      price: '',
-      description: '',
-      sellerName: '',
-      sellerPhone: '',
-      sellerEmail: '',
-      img: '',
-      lensMount: '',
-      sensorSize: '',
-      maxResolution: '',
-      shutterCount: '',
-      focalLength: '',
-      maxAperture: '',
-      glassCondition: '',
-      connectionType: '',
-      polarPattern: '',
-      microphoneType: '',
-      lightSource: '',
-      colorTemp: '',
-      powerOutput: '',
-      loadCapacity: '',
-      compatibility: '',
-    });
+    const listingFee = 15000;
+
+    try {
+      window.FlutterwaveCheckout({
+        public_key: flwKey,
+        tx_ref: `GP-LIST-${Date.now()}`,
+        amount: listingFee,
+        currency: "UGX",
+        payment_options: "mobile_money_uganda, card",
+        customer: {
+          email: listingForm.sellerEmail || "seller@gearplug.ug",
+          phone_number: listingForm.sellerPhone || "",
+          name: listingForm.sellerName || "Anonymous Seller",
+        },
+        customizations: {
+          title: "Gear Plug Uganda",
+          description: `Listing Fee (Flat 15,000 UGX charge)`,
+          logo: "https://gearplug.ug/logo.png"
+        },
+        callback: async function (paymentResponse) {
+          console.log("Flutterwave Listing Fee response:", paymentResponse);
+          if (paymentResponse.status === "successful" || paymentResponse.charge_response_code === "00") {
+            const sellerPayout = parseFloat(listingForm.price);
+            const calculatedListingPrice = Math.round(sellerPayout / 0.8);
+
+            const specs = {};
+            if (listingForm.category === 'Camera Bodies') {
+              specs.lensMount = listingForm.lensMount || '';
+              specs.sensorSize = listingForm.sensorSize || '';
+              specs.maxResolution = listingForm.maxResolution || '';
+              specs.shutterCount = listingForm.shutterCount || '';
+            } else if (listingForm.category === 'Lenses') {
+              specs.lensMount = listingForm.lensMount || '';
+              specs.focalLength = listingForm.focalLength || '';
+              specs.maxAperture = listingForm.maxAperture || '';
+              specs.glassCondition = listingForm.glassCondition || '';
+            } else if (listingForm.category === 'Sound Equipment') {
+              specs.connectionType = listingForm.connectionType || '';
+              specs.polarPattern = listingForm.polarPattern || '';
+              specs.microphoneType = listingForm.microphoneType || '';
+            } else if (listingForm.category === 'Tripods & Lighting') {
+              specs.lightSource = listingForm.lightSource || '';
+              specs.colorTemp = listingForm.colorTemp || '';
+              specs.powerOutput = listingForm.powerOutput || '';
+            } else if (listingForm.category === 'Accessories') {
+              specs.loadCapacity = listingForm.loadCapacity || '';
+              specs.compatibility = listingForm.compatibility || '';
+            }
+
+            const newProduct = {
+              id: `mp-${Date.now()}`,
+              name: listingForm.name,
+              brand: listingForm.brand,
+              category: listingForm.category,
+              price: calculatedListingPrice,
+              sellerPayout: sellerPayout,
+              description: listingForm.description,
+              img: listingForm.img || '/fx6_camera_1782841415607.png',
+              condition: listingForm.condition,
+              specs: specs,
+              sellerRating: 'Verified Seller ★',
+              watchers: 1,
+              seller: {
+                name: listingForm.sellerName,
+                phone: listingForm.sellerPhone,
+                email: listingForm.sellerEmail,
+              },
+              isMarketplace: true,
+              listingPaymentRef: String(paymentResponse.transaction_id || paymentResponse.flw_ref || '')
+            };
+
+            try {
+              const wooProduct = await createWooCommerceProduct(newProduct);
+              if (wooProduct && wooProduct.id) {
+                newProduct.id = wooProduct.id;
+              }
+            } catch (err) {
+              console.warn("Failed to create product in WooCommerce, fallback local listing:", err);
+            }
+
+            addMarketplaceProduct(newProduct);
+            setIsListingModalOpen(false);
+
+            setListingForm({
+              name: '',
+              brand: '',
+              category: 'Camera Bodies',
+              condition: 'Excellent',
+              price: '',
+              description: '',
+              sellerName: '',
+              sellerPhone: '',
+              sellerEmail: '',
+              img: '',
+              lensMount: '',
+              sensorSize: '',
+              maxResolution: '',
+              shutterCount: '',
+              focalLength: '',
+              maxAperture: '',
+              glassCondition: '',
+              connectionType: '',
+              polarPattern: '',
+              microphoneType: '',
+              lightSource: '',
+              colorTemp: '',
+              powerOutput: '',
+              loadCapacity: '',
+              compatibility: '',
+            });
+            alert("Listing fee paid! Your gear is now live on Gear Plug!");
+          } else {
+            alert("Listing payment unsuccessful: " + paymentResponse.message);
+          }
+        },
+        onclose: function () {
+          // Closed payment modal
+        }
+      });
+    } catch (err) {
+      console.error("Flutterwave listing payment failure", err);
+      alert("Could not load payment checkout system for listing fee. Please verify setup.");
+    }
   };
 
   const handleFormChange = (e) => {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleCheckout = async (e) => {
+  const handleCheckout = (e) => {
     e.preventDefault();
     if (kitItems.length === 0) return;
-    setIsCheckingOut(true);
-
-    const newOrder = {
-      id: `GP-${Date.now().toString(36).toUpperCase()}`,
-      customerId: currentUser?.id || 'guest',
-      date: new Date().toISOString(),
-      items: kitItems.map(item => ({ id: item.id, name: item.name, price: item.price })),
-      total: totalCost,
-      city: form.city || 'Kampala'
-    };
-
-    try {
-      const wooOrder = await createWooCommerceOrder(kitItems, form);
-      if (wooOrder && wooOrder.id) {
-        newOrder.id = `WC-${wooOrder.id}`;
-      }
-    } catch (err) {
-      console.warn("Failed to sync checkout with WooCommerce backend, fallback local order placed:", err);
+    
+    const flwKey = import.meta.env.VITE_FLUTTERWAVE_PUBLIC_KEY || '';
+    if (!flwKey) {
+      alert("Flutterwave configuration is missing. Please add VITE_FLUTTERWAVE_PUBLIC_KEY to your environment/repository secrets.");
+      return;
     }
 
-    setTimeout(() => {
-      addOrder(newOrder);
+    const platformFee = 1850;
+    const finalTotal = totalCost + platformFee;
+    
+    setIsCheckingOut(true);
+
+    try {
+      window.FlutterwaveCheckout({
+        public_key: flwKey,
+        tx_ref: `GP-TX-${Date.now()}`,
+        amount: finalTotal,
+        currency: "UGX",
+        payment_options: "mobile_money_uganda, card",
+        customer: {
+          email: form.email || "buyer@gearplug.ug",
+          phone_number: form.phone || "",
+          name: form.fullName || "Anonymous Buyer",
+        },
+        customizations: {
+          title: "Gear Plug Uganda",
+          description: `Escrow Payment (Total: UGX ${finalTotal.toLocaleString()})`,
+          logo: "https://gearplug.ug/logo.png"
+        },
+        callback: async function (paymentResponse) {
+          console.log("Flutterwave payment response:", paymentResponse);
+          if (paymentResponse.status === "successful" || paymentResponse.charge_response_code === "00") {
+            const newOrder = {
+              id: `GP-${Date.now().toString(36).toUpperCase()}`,
+              customerId: currentUser?.id || 'guest',
+              date: new Date().toISOString(),
+              items: kitItems.map(item => ({ id: item.id, name: item.name, price: item.price })),
+              total: finalTotal,
+              city: form.city || 'Kampala',
+              flwRef: String(paymentResponse.transaction_id || paymentResponse.flw_ref || '')
+            };
+
+            try {
+              const wooOrder = await createWooCommerceOrder(kitItems, form, newOrder.flwRef);
+              if (wooOrder && wooOrder.id) {
+                newOrder.id = `WC-${wooOrder.id}`;
+              }
+            } catch (err) {
+              console.warn("Failed to sync checkout with WooCommerce backend, fallback local order placed:", err);
+            }
+
+            addOrder(newOrder);
+            clearKit();
+            setIsCheckingOut(false);
+            setView('success');
+          } else {
+            alert("Payment transaction was not successful: " + paymentResponse.message);
+            setIsCheckingOut(false);
+          }
+        },
+        onclose: function () {
+          setIsCheckingOut(false);
+        }
+      });
+    } catch (err) {
+      console.error("Flutterwave checkout failure", err);
+      alert("Could not load payment checkout system. Please verify your connection.");
       setIsCheckingOut(false);
-      setView('success');
-    }, 1500);
+    }
   };
 
   const handleNewOrder = () => {
@@ -701,7 +809,7 @@ export default function ShopPortal() {
                 {isCheckingOut ? (
                   <><Loader2 className="animate-spin" size={18} /> PROCESSING ORDER...</>
                 ) : (
-                  `PLACE ORDER — UGX ${totalCost.toLocaleString()}`
+                  `PLACE ORDER — UGX ${(totalCost + 1850).toLocaleString()}`
                 )}
               </button>
 
@@ -739,12 +847,16 @@ export default function ShopPortal() {
                   <span>UGX {totalCost.toLocaleString()}</span>
                 </div>
                 <div className="total-line">
+                  <span>Gear Plug Tax (Platform Escrow Fee)</span>
+                  <span>UGX 1,850</span>
+                </div>
+                <div className="total-line">
                   <span>Delivery</span>
                   <span className="text-accent">FREE</span>
                 </div>
                 <div className="total-line grand-total">
                   <span>Total</span>
-                  <span>UGX {totalCost.toLocaleString()}</span>
+                  <span>UGX ${(totalCost + 1850).toLocaleString()}</span>
                 </div>
               </div>
 

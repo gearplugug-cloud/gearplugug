@@ -1,6 +1,12 @@
 import React, { createContext, useState, useContext, useCallback, useEffect } from 'react';
 import SAMPLE_PRODUCTS from '../lib/sampleProducts';
-import { getProducts as fetchWooProducts } from '../lib/woocommerce';
+import { 
+  getProducts as fetchWooProducts,
+  getCoCartCart,
+  addToCoCart,
+  removeFromCoCart,
+  clearCoCart
+} from '../lib/woocommerce';
 
 const KitContext = createContext();
 
@@ -68,6 +74,22 @@ export const KitProvider = ({ children }) => {
   const [kitItems, setKitItems]     = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [toasts, setToasts]         = useState([]);
+
+  // CoCart session variables
+  const [cartKey] = useState(() => {
+    try {
+      let key = localStorage.getItem('gearplug_cart_key');
+      if (!key) {
+        key = 'cart-' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        localStorage.setItem('gearplug_cart_key', key);
+      }
+      return key;
+    } catch (e) {
+      return 'cart-fallback';
+    }
+  });
+
+  const [cocartItemKeys, setCocartItemKeys] = useState({});
 
   // User Profile States
   const [profiles, setProfiles] = useState(() => {
@@ -182,6 +204,39 @@ export const KitProvider = ({ children }) => {
     loadProducts();
   }, []);
 
+  useEffect(() => {
+    if (products.length === 0) return;
+    const loadCoCart = async () => {
+      try {
+        const cart = await getCoCartCart(cartKey);
+        if (cart && cart.items) {
+          const keys = {};
+          const items = [];
+          Object.values(cart.items).forEach(item => {
+            keys[item.id] = item.item_key;
+            const matched = products.find(p => String(p.id) === String(item.id));
+            if (matched) {
+              items.push(matched);
+            } else {
+              items.push({
+                id: item.id,
+                name: item.name,
+                price: parseFloat(item.price || 0),
+                category: 'Accessories',
+                img: '/fx6_camera_1782841415607.png'
+              });
+            }
+          });
+          setCocartItemKeys(keys);
+          setKitItems(items);
+        }
+      } catch (e) {
+        console.error("Failed to load CoCart session", e);
+      }
+    };
+    loadCoCart();
+  }, [products, cartKey]);
+
   const addMarketplaceProduct = (newProduct) => {
     const productWithSeller = {
       ...newProduct,
@@ -225,28 +280,58 @@ export const KitProvider = ({ children }) => {
   }, []);
 
   /* ── Kit operations ── */
-  const addToKit = (item) => {
+  const addToKit = async (item) => {
     if (!kitItems.find((i) => i.id === item.id)) {
       const newKitSize = kitItems.length + 1;
       setKitItems(prev => [...prev, item]);
       setIsCartOpen(true);
       
-      // Advanced Motivational Logic
+      try {
+        const res = await addToCoCart(cartKey, item.id);
+        if (res && res.item_key) {
+          setCocartItemKeys(prev => ({ ...prev, [item.id]: res.item_key }));
+        }
+      } catch (err) {
+        console.error("CoCart add sync failed", err);
+      }
+      
       if (newKitSize === 4) {
-        showToast(null, true, 0); // Trigger first motivational toast
+        showToast(null, true, 0);
       } else if (newKitSize === 7) {
-        showToast(null, true, 1); // Trigger second motivational toast
+        showToast(null, true, 1);
       } else {
-        showToast(item.category); // Trigger regular category toast
+        showToast(item.category);
       }
     }
   };
 
-  const removeFromKit = (itemId) => {
-    setKitItems(kitItems.filter((i) => i.id !== itemId));
+  const removeFromKit = async (itemId) => {
+    setKitItems(prev => prev.filter((i) => i.id !== itemId));
+    
+    const itemKey = cocartItemKeys[itemId];
+    if (itemKey) {
+      try {
+        await removeFromCoCart(cartKey, itemKey);
+        setCocartItemKeys(prev => {
+          const next = { ...prev };
+          delete next[itemId];
+          return next;
+        });
+      } catch (err) {
+        console.error("CoCart remove sync failed", err);
+      }
+    }
   };
 
-  const clearKit = () => setKitItems([]);
+  const clearKit = async () => {
+    setKitItems([]);
+    try {
+      await clearCoCart(cartKey);
+      setCocartItemKeys({});
+    } catch (err) {
+      console.error("CoCart clear sync failed", err);
+    }
+  };
 
   const totalCost  = kitItems.reduce((acc, item) => acc + (item.price || 0), 0);
   const totalItems = kitItems.length;
