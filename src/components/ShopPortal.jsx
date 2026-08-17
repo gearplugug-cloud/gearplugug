@@ -1,8 +1,8 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useKit } from '../context/KitContext';
 import { createOrder as createWooCommerceOrder, createProduct as createWooCommerceProduct } from '../lib/woocommerce';
 
-import { ArrowLeft, ShieldCheck, Truck, CreditCard, Smartphone, CheckCircle, Search, Filter, Loader2, X, Package, MapPin, User, Phone, Mail, Upload, Camera } from 'lucide-react';
+import { ArrowLeft, ShieldCheck, Truck, CreditCard, Smartphone, CheckCircle, Search, Loader2, X, Package, MapPin, User, Upload, Camera } from 'lucide-react';
 import './ShopPortal.css';
 
 const CATEGORIES = ['All', 'Camera Bodies', 'Lenses', 'Sound Equipment', 'Accessories', 'Tripods & Lighting'];
