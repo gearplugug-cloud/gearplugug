@@ -88,6 +88,43 @@ export default function ShopPortal() {
 
   // --- End of migrated state ---
 
+  // --- Saved Searches / Filters state ---
+  const [savedFilters, setSavedFilters] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('gearplug_saved_filters') || '[]');
+    } catch {
+      return [];
+    }
+  });
+
+  const saveCurrentFilter = () => {
+    const newFilter = {
+      id: Date.now().toString(),
+      name: searchQuery || `${activeCategory} - ${filterBrand}`,
+      searchQuery,
+      activeCategory,
+      filterBrand,
+      filterCondition,
+      filterMount,
+      filterMinPrice,
+      filterMaxPrice
+    };
+    const updated = [...savedFilters, newFilter];
+    setSavedFilters(updated);
+    localStorage.setItem('gearplug_saved_filters', JSON.stringify(updated));
+    alert('Filter saved!');
+  };
+
+  const applySavedFilter = (filter) => {
+    setSearchQuery(filter.searchQuery || '');
+    setActiveCategory(filter.activeCategory || 'All');
+    setFilterBrand(filter.filterBrand || 'All');
+    setFilterCondition(filter.filterCondition || 'All');
+    setFilterMount(filter.filterMount || 'All');
+    setFilterMinPrice(filter.filterMinPrice || '');
+    setFilterMaxPrice(filter.filterMaxPrice || '');
+  };
+
   const unifiedCatalog = useMemo(() => {
     const buyItems = products.map(p => ({ ...p, format: 'buy' }));
     const bidItems = auctions.map(a => ({ ...a, format: 'bid', price: a.currentBid }));
