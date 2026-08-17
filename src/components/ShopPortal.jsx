@@ -920,148 +920,120 @@ export default function ShopPortal() {
             </button>
           </div>
 
-          {shopTab === 'profile' ? (
-            /* User Profile & Dashboard View */
-            <div className="profile-dashboard-layout">
-              {/* Profile Card / Header */}
-              <div className="profile-hero-card shadow-premium">
-                <div className="profile-avatar-large">
-                  {currentUser?.avatar || '👤'}
+          {/* Unified eBay-style Search & Filter view with Sidebar */}
+          <div className="shop-unified-browser">
+            {/* Sticky Sidebar Filter Panel */}
+            <aside className="shop-filters-sidebar shadow-premium">
+              <div className="sidebar-filter-section">
+                <h3>Search & Save</h3>
+                <div className="sidebar-search-box">
+                  <Search size={14} className="search-icon" />
+                  <input 
+                    type="text" 
+                    placeholder="Search items..." 
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
                 </div>
-                <div className="profile-primary-details">
-                  <div className="name-badge-row">
-                    <h2>{currentUser?.name || 'Anonymous'}</h2>
-                    <span className="user-role-badge">{currentUser?.role || 'Guest'}</span>
-                  </div>
-                  <p className="user-org text-muted">{currentUser?.company || 'Freelancer'} • {currentUser?.location || 'Kampala'}</p>
-                  
-                  <div className="user-contact-pills">
-                    <span className="contact-pill"><Phone size={12} /> {currentUser?.phone || 'No phone'}</span>
-                    <span className="contact-pill"><Mail size={12} /> {currentUser?.email || 'No email'}</span>
-                  </div>
-                </div>
+                <button className="btn-save-filter mt-2" onClick={saveCurrentFilter}>
+                  💾 Save This Search
+                </button>
+              </div>
 
-                {/* Logout Button */}
-                <div className="profile-switcher-wrapper">
+              <div className="sidebar-filter-section">
+                <h3>Category</h3>
+                <ul className="filter-list">
+                  {CATEGORIES.map(cat => (
+                    <li key={cat}>
+                      <button 
+                        className={`filter-link-btn ${activeCategory === cat ? 'active' : ''}`}
+                        onClick={() => setActiveCategory(cat)}
+                      >
+                        {cat === 'All' ? '📁 All Categories' : cat}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="sidebar-filter-section">
+                <h3>Brand</h3>
+                <ul className="filter-checkbox-list">
+                  {BRANDS.map(brand => (
+                    <li key={brand}>
+                      <label className="checkbox-label">
+                        <input 
+                          type="radio" 
+                          name="filter-brand"
+                          checked={filterBrand === brand}
+                          onChange={() => setFilterBrand(brand)}
+                        />
+                        <span>{brand}</span>
+                      </label>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="sidebar-filter-section">
+                <h3>Condition</h3>
+                <ul className="filter-checkbox-list">
+                  {CONDITIONS.map(cond => (
+                    <li key={cond}>
+                      <label className="checkbox-label">
+                        <input 
+                          type="radio" 
+                          name="filter-condition"
+                          checked={filterCondition === cond}
+                          onChange={() => setFilterCondition(cond)}
+                        />
+                        <span>{cond}</span>
+                      </label>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="sidebar-filter-section">
+                <h3>Lens Mount</h3>
+                <ul className="filter-checkbox-list">
+                  {MOUNTS.map(mnt => (
+                    <li key={mnt}>
+                      <label className="checkbox-label">
+                        <input 
+                          type="radio" 
+                          name="filter-mount"
+                          checked={filterMount === mnt}
+                          onChange={() => setFilterMount(mnt)}
+                        />
+                        <span>{mnt === 'All' ? 'All Mounts' : mnt.replace('Sony ', '').replace('ARRI ', '')}</span>
+                      </label>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="sidebar-filter-section">
+                <h3>Price (UGX)</h3>
+                <div className="price-range-inputs">
+                  <input 
+                    type="number" 
+                    placeholder="Min" 
+                    value={filterMinPrice}
+                    onChange={(e) => setFilterMinPrice(e.target.value)}
+                  />
+                  <span>to</span>
+                  <input 
+                    type="number" 
+                    placeholder="Max" 
+                    value={filterMaxPrice}
+                    onChange={(e) => setFilterMaxPrice(e.target.value)}
+                  />
+                </div>
+                {(filterMinPrice || filterMaxPrice || filterBrand !== 'All' || filterCondition !== 'All' || filterMount !== 'All' || searchQuery || activeCategory !== 'All') && (
                   <button 
-                    className="btn-create-profile-trigger" 
+                    className="btn-clear-filters text-accent text-xs mt-3"
                     onClick={() => {
-                      logout();
-                      setShopTab('all');
-                    }} 
-                    style={{marginTop: 0, padding: '10px 20px', width: 'auto'}}
-                  >
-                    Log Out of Gear Plug
-                  </button>
-                </div>
-              </div>
-
-              {/* Dashboard Stats */}
-              <div className="dashboard-stats-grid mb-8">
-                <div className="stat-card shadow-premium">
-                  <span className="stat-title">My Gear Listings</span>
-                  <strong className="stat-number">
-                    {products.filter(p => p.sellerId === currentUser?.id).length}
-                  </strong>
-                  <span className="stat-note">Items listed for sale</span>
-                </div>
-                <div className="stat-card shadow-premium">
-                  <span className="stat-title">Bids Placed</span>
-                  <strong className="stat-number">
-                    {auctions.filter(a => a.highestBidder === currentUser?.name).length}
-                  </strong>
-                  <span className="stat-note">Active auction sessions</span>
-                </div>
-                <div className="stat-card shadow-premium">
-                  <span className="stat-title">Order History</span>
-                  <strong className="stat-number">
-                    {orders.filter(o => o.customerId === currentUser?.id).length}
-                  </strong>
-                  <span className="stat-note">Completed purchases</span>
-                </div>
-              </div>
-
-              {/* Transactions Tab Section */}
-              <div className="profile-details-sections">
-                {/* Listings */}
-                <div className="dashboard-section shadow-premium">
-                  <h3>My Gear for Sale</h3>
-                  {products.filter(p => p.sellerId === currentUser?.id).length === 0 ? (
-                    <p className="no-data text-muted">You haven't listed any equipment yet. Click "+ List Your Gear" to sell.</p>
-                  ) : (
-                    <div className="dashboard-table-wrapper">
-                      <table className="dashboard-table">
-                        <thead>
-                          <tr>
-                            <th>Gear</th>
-                            <th>Desired Payout</th>
-                            <th>Listing Price (20% Fee Added)</th>
-                            <th>Condition</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {products.filter(p => p.sellerId === currentUser?.id).map(prod => (
-                            <tr key={prod.id}>
-                              <td className="table-gear-cell">
-                                <img src={prod.img} alt={prod.name} />
-                                <div>
-                                  <strong>{prod.name}</strong>
-                                  <span className="text-muted block text-xs">{prod.brand}</span>
-                                </div>
-                              </td>
-                              <td className="text-accent font-bold">
-                                UGX {(prod.sellerPayout || prod.price * 0.8).toLocaleString()}
-                              </td>
-                              <td className="font-bold">
-                                UGX {prod.price.toLocaleString()}
-                              </td>
-                              <td>
-                                <span className="condition-pill">{prod.condition}</span>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
-
-                {/* Bidding Activity */}
-                <div className="dashboard-section shadow-premium mt-8">
-                  <h3>Active Auction Bids</h3>
-                  {auctions.filter(a => a.highestBidder === currentUser?.name).length === 0 ? (
-                    <p className="no-data text-muted">No active bids. Switch to "Live Auctions" to start bidding!</p>
-                  ) : (
-                    <div className="dashboard-table-wrapper">
-                      <table className="dashboard-table">
-                        <thead>
-                          <tr>
-                            <th>Item</th>
-                            <th>My High Bid</th>
-                            <th>Time Remaining</th>
-                            <th>Status</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {auctions.map(auc => {
-                            if (auc.highestBidder !== currentUser?.name) return null;
-                            const isEnding = auc.timeLeft < 3600;
-                            return (
-                              <tr key={auc.id}>
-                                <td className="table-gear-cell">
-                                  <img src={auc.img} alt={auc.name} />
-                                  <div>
-                                    <strong>{auc.name}</strong>
-                                    <span className="text-muted block text-xs">{auc.brand}</span>
-                                  </div>
-                                </td>
-                                <td className="text-accent font-bold">
-                                  UGX {auc.currentBid.toLocaleString()}
-                                </td>
-                                <td className={isEnding ? 'text-red font-bold' : ''}>
-                                  {auc.timeLeft > 0 ? formatTime(auc.timeLeft) : 'ENDED'}
-                                </td>
-                                <td>
                       setFilterBrand('All');
                       setFilterCondition('All');
                       setFilterMount('All');
