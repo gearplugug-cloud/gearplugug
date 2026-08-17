@@ -27,6 +27,7 @@ jobs:
           # They are injected at build time and never stored in the repo.
           VITE_WC_URL: ${{ secrets.VITE_WC_URL }}
           VITE_WC_AUTH: ${{ secrets.VITE_WC_AUTH }}
+          VITE_FLUTTERWAVE_PUBLIC_KEY: ${{ secrets.VITE_FLUTTERWAVE_PUBLIC_KEY }}
         run: npm run build
 
       - name: Deploy to Hostinger via FTP
