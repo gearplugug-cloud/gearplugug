@@ -3,8 +3,20 @@
   --text-color: #ffffff;
   --text-muted: #888888;
   --accent-color: #FF6600;
-  --border-color: #111111;
+  --border-color: #222222;
   --border-light: #1a1a1a;
+  --card-bg: #111111;
+  --trust-bg: #0a0a0a;
+}
+
+[data-theme="light"] {
+  --bg-color: #F8F9FA;
+  --text-color: #1A1A1A;
+  --text-muted: #666666;
+  --border-color: #E0E0E0;
+  --border-light: #F0F0F0;
+  --card-bg: #FFFFFF;
+  --trust-bg: #FFFFFF;
 }
 
 * {

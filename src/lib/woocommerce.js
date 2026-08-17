@@ -111,6 +111,8 @@ export const createProduct = async (productDetails) => {
       regular_price: String(productDetails.price),
       description: productDetails.description || '',
       short_description: `Listed by ${productDetails.seller?.name || 'Anonymous'}. Phone: ${productDetails.seller?.phone || ''}`,
+      manage_stock: true,
+      stock_quantity: 1,
       categories: [
         {
           name: productDetails.category

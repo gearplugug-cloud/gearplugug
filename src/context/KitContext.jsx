@@ -7,6 +7,15 @@ import {
   removeFromCoCart,
   clearCoCart
 } from '../lib/woocommerce';
+import { auth } from '../lib/firebase';
+import { 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword, 
+  signOut, 
+  onAuthStateChanged,
+  sendEmailVerification,
+  updateProfile
+} from 'firebase/auth';
 
 const KitContext = createContext();
 
@@ -47,30 +56,17 @@ const MOTIVATIONAL_SUGGESTIONS = [
   }
 ];
 
-const MOCK_USERS = [
-  {
-    id: 'usr-001',
-    name: 'Emma Patrick',
-    email: 'emma@gearplug.ug',
-    phone: '+256 701 234 567',
-    role: 'Professional Filmmaker',
-    avatar: '🎥',
-    company: 'Aura Media Kampala',
-    location: 'Kampala, UG'
-  },
-  {
-    id: 'usr-002',
-    name: 'Nsubuga Henry',
-    email: 'henry@director.ug',
-    phone: '+256 782 999 888',
-    role: 'Commercial Director',
-    avatar: '🎬',
-    company: 'Nile Motion Pictures',
-    location: 'Entebbe, UG'
-  }
-];
-
 export const KitProvider = ({ children }) => {
+  const [theme, setTheme] = useState('dark');
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+  };
+
   const [kitItems, setKitItems]     = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [toasts, setToasts]         = useState([]);
@@ -92,55 +88,83 @@ export const KitProvider = ({ children }) => {
   const [cocartItemKeys, setCocartItemKeys] = useState({});
 
   // User Profile States
-  const [profiles, setProfiles] = useState(() => {
-    try {
-      const saved = localStorage.getItem('gearplug_profiles');
-      const parsed = saved ? JSON.parse(saved) : null;
-      return Array.isArray(parsed) ? parsed : MOCK_USERS;
-    } catch (e) {
-      return MOCK_USERS;
-    }
-  });
+  const [currentUser, setCurrentUser] = useState(null);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const [authError, setAuthError] = useState('');
 
-  const [currentUser, setCurrentUser] = useState(() => {
-    try {
-      const saved = localStorage.getItem('gearplug_current_user');
-      const parsed = saved ? JSON.parse(saved) : null;
-      return parsed && parsed.id && parsed.name ? parsed : MOCK_USERS[0];
-    } catch (e) {
-      return MOCK_USERS[0];
-    }
-  });
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setCurrentUser({
+          id: user.uid,
+          name: user.displayName || 'Vendor',
+          email: user.email,
+          emailVerified: user.emailVerified,
+          avatar: '👤'
+        });
+      } else {
+        setCurrentUser(null);
+      }
+      setIsAuthLoading(false);
+    });
+    return unsubscribe;
+  }, []);
 
-  const changeUser = (user) => {
-    setCurrentUser(user);
+  const signup = async (email, password, firstName, lastName) => {
+    setIsAuthLoading(true);
+    setAuthError('');
     try {
-      localStorage.setItem('gearplug_current_user', JSON.stringify(user));
-    } catch (e) {
-      console.error(e);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      
+      // Update Firebase profile
+      await updateProfile(user, { displayName: `${firstName} ${lastName}` });
+      
+      // Send verification email
+      await sendEmailVerification(user);
+      
+      // Hit WordPress custom endpoint to provision Dokan Vendor
+      await fetch('https://cornflowerblue-clam-962411.hostingersite.com/wp-json/gearplug/v1/vendor', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          first_name: firstName,
+          last_name: lastName,
+          firebase_uid: user.uid,
+          secret: 'gearplug-super-secret-2026'
+        })
+      });
+      
+      return true;
+    } catch (error) {
+      setAuthError(error.message);
+      return false;
+    } finally {
+      setIsAuthLoading(false);
     }
+  };
+
+  const login = async (email, password) => {
+    setIsAuthLoading(true);
+    setAuthError('');
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      return true;
+    } catch (error) {
+      setAuthError(error.message);
+      return false;
+    } finally {
+      setIsAuthLoading(false);
+    }
+  };
+
+  const logout = async () => {
+    await signOut(auth);
   };
 
   // Shared active shop tab state
   const [shopTab, setShopTab] = useState('all');
-
-  const createProfile = (newProfile) => {
-    setProfiles(prev => {
-      const next = [...prev, newProfile];
-      try {
-        localStorage.setItem('gearplug_profiles', JSON.stringify(next));
-      } catch (e) {
-        console.error(e);
-      }
-      return next;
-    });
-    setCurrentUser(newProfile);
-    try {
-      localStorage.setItem('gearplug_current_user', JSON.stringify(newProfile));
-    } catch (e) {
-      console.error(e);
-    }
-  };
 
   // Orders/Purchases History State
   const [orders, setOrders] = useState(() => {
@@ -164,6 +188,8 @@ export const KitProvider = ({ children }) => {
       return next;
     });
   };
+
+
   
   // Marketplace products state with localStorage persistence
   const [products, setProducts] = useState([]);
@@ -351,13 +377,17 @@ export const KitProvider = ({ children }) => {
       products,
       addMarketplaceProduct,
       currentUser,
-      changeUser,
+      login,
+      signup,
+      logout,
+      isAuthLoading,
+      authError,
       orders,
       addOrder,
-      profiles,
-      createProfile,
       shopTab,
       setShopTab,
+      theme,
+      toggleTheme,
     }}>
       {children}
 

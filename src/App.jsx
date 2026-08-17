@@ -3,8 +3,8 @@ import { Routes, Route, useLocation } from 'react-router-dom';
 import { DndContext, pointerWithin } from '@dnd-kit/core';
 import { useKit } from './context/KitContext';
 import Navbar from './components/Navbar';
-import Hero from './components/Hero';
-import HeroRigAnimation from './components/HeroRigAnimation';
+import MarketplaceHero from './components/MarketplaceHero';
+import TrustBadges from './components/TrustBadges';
 import LatestArrivals from './components/LatestArrivals';
 import CategoryGrid from './components/CategoryGrid';
 import KitBuilderSidebar from './components/KitBuilderSidebar';
@@ -21,14 +21,26 @@ function ScrollToTop() {
   return null;
 }
 
+function Rentals() {
+  return (
+    <>
+      <div style={{ paddingTop: '80px', paddingBottom: '40px' }} className="container">
+        <h1 className="section-title">Gear Plug Rentals</h1>
+        <p className="text-muted mb-8">Rent high-end cinema gear locally in Kampala. Fast verification, instant booking.</p>
+      </div>
+      <OperationalVideo />
+      <RentalForm />
+    </>
+  );
+}
+
 function Home() {
   return (
     <>
-      <HeroRigAnimation />
+      <MarketplaceHero />
+      <TrustBadges />
       <LatestArrivals />
       <CategoryGrid />
-      <OperationalVideo />
-      <RentalForm />
     </>
   );
 }
@@ -56,6 +68,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/shop" element={<ShopPortal />} />
+            <Route path="/rentals" element={<Rentals />} />
           </Routes>
         </main>
 

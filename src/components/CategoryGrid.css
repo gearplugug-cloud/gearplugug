@@ -30,7 +30,7 @@
 
 .brand-filter-btn.active {
   background-color: var(--accent-color);
-  color: #000; /* Black text for active as requested */
+  color: #fff;
   border-color: var(--accent-color);
 }
 
@@ -54,7 +54,7 @@
 }
 
 .gear-card {
-  background-color: var(--border-light);
+  background-color: var(--card-bg);
   border: 1px solid var(--border-color);
   border-radius: 8px;
   overflow: hidden;
@@ -64,13 +64,13 @@
 
 .gear-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.2);
   border-color: var(--accent-color);
 }
 
 .gear-card-image {
   height: 160px;
-  background-color: #111;
+  background-color: var(--border-light);
   /* Add actual background images later */
 }
 

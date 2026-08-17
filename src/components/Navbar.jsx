@@ -1,15 +1,27 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Sun, Moon, Search } from 'lucide-react';
 import { useKit } from '../context/KitContext';
+import AuthModal from './AuthModal';
 import './Navbar.css';
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { currentUser, setShopTab } = useKit();
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const { currentUser, setShopTab, theme, toggleTheme } = useKit();
   const navigate = useNavigate();
   const location = useLocation();
   const onHome = location.pathname === '/';
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate('/shop', { state: { searchQuery: searchQuery } });
+      setSearchQuery('');
+      setIsMenuOpen(false);
+    }
+  };
 
   // Scroll to a section by id. If id is null, scroll to the top of the page.
   const scrollToSection = (id) => {
@@ -42,7 +54,21 @@ export default function Navbar() {
         </a>
 
         <div className="nav-right-actions">
-          {currentUser && currentUser.name && (
+          <form className="navbar-search-form hidden-mobile" onSubmit={handleSearchSubmit}>
+            <Search size={16} className="navbar-search-icon" />
+            <input 
+              type="text" 
+              placeholder="Search gear..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </form>
+
+          <button className="theme-toggle-btn" onClick={toggleTheme} aria-label="Toggle theme">
+            {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+          </button>
+
+          {currentUser && currentUser.name ? (
             <button
               type="button"
               className="navbar-profile-btn"
@@ -55,6 +81,13 @@ export default function Navbar() {
             >
               <span className="navbar-profile-avatar">{currentUser.avatar || '👤'}</span>
               <span className="navbar-profile-name">{(currentUser.name || '').split(' ')[0]}</span>
+            </button>
+          ) : (
+            <button 
+              className="navbar-login-btn"
+              onClick={() => setIsAuthOpen(true)}
+            >
+              Log In / Sell
             </button>
           )}
 
@@ -69,6 +102,15 @@ export default function Navbar() {
         </div>
 
         <div className={`nav-links ${isMenuOpen ? 'mobile-open' : ''}`}>
+          <form className="navbar-search-form mobile-only" onSubmit={handleSearchSubmit}>
+            <Search size={16} className="navbar-search-icon" />
+            <input 
+              type="text" 
+              placeholder="Search gear..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </form>
           <button
             type="button"
             className={`nav-link ${onHome ? 'active' : ''}`}
@@ -76,29 +118,23 @@ export default function Navbar() {
           >
             Home
           </button>
-          <button
-            type="button"
-            className="nav-link"
-            onClick={() => goToSection('new-in')}
-          >
-            New Gear
-          </button>
-          <button
-            type="button"
-            className="nav-link"
-            onClick={() => goToSection('rental-form')}
-          >
-            Contact
-          </button>
           <a
             href="/shop"
-            className={`nav-link btn-shop-highlight ${!onHome ? 'active' : ''}`}
-            onClick={() => setIsMenuOpen(false)}
+            className={`nav-link ${location.pathname === '/shop' ? 'active' : ''}`}
+            onClick={(e) => { e.preventDefault(); navigate('/shop'); setIsMenuOpen(false); }}
           >
-            Shop Portal
+            Marketplace
+          </a>
+          <a
+            href="/rentals"
+            className={`nav-link ${location.pathname === '/rentals' ? 'active' : ''}`}
+            onClick={(e) => { e.preventDefault(); navigate('/rentals'); setIsMenuOpen(false); }}
+          >
+            Rentals
           </a>
         </div>
       </div>
+      <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
     </nav>
   );
 }

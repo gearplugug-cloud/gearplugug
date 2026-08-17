@@ -11,20 +11,9 @@ const CONDITIONS = ['All', 'Brand New', 'Open Box', 'Used - Mint', 'Used - Like 
 const MOUNTS = ['All', 'Sony E-mount', 'Canon EF', 'Canon RF', 'ARRI PL', 'Leica M-mount', 'L-mount'];
 
 export default function ShopPortal() {
-  const { kitItems, totalCost, clearKit, addToKit, removeFromKit, products, addMarketplaceProduct, currentUser, changeUser, orders, addOrder, profiles, createProfile, shopTab, setShopTab } = useKit();
+  const { kitItems, totalCost, clearKit, addToKit, removeFromKit, products, addMarketplaceProduct, currentUser, orders, addOrder, shopTab, setShopTab, logout } = useKit();
   const [view, setView] = useState('browse'); // 'browse' | 'checkout' | 'success'
   
-  // Profile creation modal and form state
-  const [isCreateProfileModalOpen, setIsCreateProfileModalOpen] = useState(false);
-  const [profileForm, setProfileForm] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    role: 'Professional Filmmaker',
-    company: '',
-    location: 'Kampala, UG',
-    avatar: '📷'
-  });
   const [activeCategory, setActiveCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterBrand, setFilterBrand] = useState('All');
@@ -331,35 +320,6 @@ export default function ShopPortal() {
 
   const handleListingFormChange = (e) => {
     setListingForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
-  };
-
-  const handleProfileFormChange = (e) => {
-    setProfileForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
-  };
-
-  const handleProfileSubmit = (e) => {
-    e.preventDefault();
-    if (!profileForm.name || !profileForm.email || !profileForm.phone) {
-      alert("Please fill in all required fields.");
-      return;
-    }
-    const newProfile = {
-      id: `usr-${Date.now()}`,
-      ...profileForm
-    };
-    createProfile(newProfile);
-    setIsCreateProfileModalOpen(false);
-    // Reset form
-    setProfileForm({
-      name: '',
-      email: '',
-      phone: '',
-      role: 'Professional Filmmaker',
-      company: '',
-      location: 'Kampala, UG',
-      avatar: '📷'
-    });
-    alert(`Profile created successfully! Welcome, ${newProfile.name}!`);
   };
 
   const handleImageUpload = (e) => {
@@ -867,6 +827,8 @@ export default function ShopPortal() {
     const isAuction = item.format === 'bid';
     const isFav = favorites.includes(item.id);
     const displayPrice = isAuction ? item.currentBid : item.price;
+    const isSoldOut = item.stock_status === 'outofstock' || item.stock_quantity === 0;
+    
     
     const quickSpecs = [];
     if (item.specs) {
@@ -893,9 +855,9 @@ export default function ShopPortal() {
       return (
         <div key={item.id} className="shop-list-row shadow-premium" onClick={() => setSelectedProduct(item)}>
           <div className="list-row-visual">
-            <img src={item.img} alt={item.name} />
-            <span className={`format-badge ${isAuction ? 'badge-auction' : 'badge-buynow'}`}>
-              {isAuction ? '🔨 AUCTION' : '⚡ BUY IT NOW'}
+            <img src={item.img} alt={item.name} style={{ opacity: isSoldOut ? 0.5 : 1 }} />
+            <span className={`format-badge ${isSoldOut ? 'badge-soldout' : (isAuction ? 'badge-auction' : 'badge-buynow')}`}>
+              {isSoldOut ? 'SOLD OUT' : (isAuction ? '🔨 AUCTION' : '⚡ BUY IT NOW')}
             </span>
             {item.condition && <span className="condition-badge">{item.condition}</span>}
           </div>
@@ -937,16 +899,17 @@ export default function ShopPortal() {
             </div>
             
             {isAuction ? (
-              <div className="auction-timer-row" onClick={() => setSelectedProduct(item)}>
+              <div className="auction-timer-row" onClick={() => !isSoldOut && setSelectedProduct(item)}>
                 <span className="timer-icon">⏱️</span>
                 <span className="timer-text font-bold">{item.timeLeft > 0 ? formatTime(item.timeLeft) : 'ENDED'}</span>
               </div>
             ) : (
               <button 
-                className="add-btn-small" 
-                onClick={() => addToKit(item)}
+                className={`add-btn-small ${isSoldOut ? 'btn-disabled' : ''}`} 
+                onClick={() => !isSoldOut && addToKit(item)}
+                disabled={isSoldOut}
               >
-                ADD TO KIT
+                {isSoldOut ? 'SOLD OUT' : 'ADD TO KIT'}
               </button>
             )}
           </div>
@@ -958,9 +921,9 @@ export default function ShopPortal() {
     return (
       <div key={item.id} className="shop-item-card shadow-premium" onClick={() => setSelectedProduct(item)}>
         <div className="item-visual">
-          <img src={item.img} alt={item.name} />
-          <span className={`format-badge ${isAuction ? 'badge-auction' : 'badge-buynow'}`}>
-            {isAuction ? '🔨 AUCTION' : '⚡ BUY IT NOW'}
+          <img src={item.img} alt={item.name} style={{ opacity: isSoldOut ? 0.5 : 1 }} />
+          <span className={`format-badge ${isSoldOut ? 'badge-soldout' : (isAuction ? 'badge-auction' : 'badge-buynow')}`}>
+            {isSoldOut ? 'SOLD OUT' : (isAuction ? '🔨 AUCTION' : '⚡ BUY IT NOW')}
           </span>
           {item.condition && <span className="condition-badge">{item.condition}</span>}
           <button 
@@ -996,15 +959,16 @@ export default function ShopPortal() {
             </div>
             
             {isAuction ? (
-              <span className="auction-timer-tag" onClick={() => setSelectedProduct(item)}>
+              <span className="auction-timer-tag" onClick={() => !isSoldOut && setSelectedProduct(item)}>
                 ⏱️ {item.timeLeft > 0 ? formatTime(item.timeLeft) : 'ENDED'}
               </span>
             ) : (
               <button 
-                className="add-btn-small" 
-                onClick={() => addToKit(item)}
+                className={`add-btn-small ${isSoldOut ? 'btn-disabled' : ''}`} 
+                onClick={() => !isSoldOut && addToKit(item)}
+                disabled={isSoldOut}
               >
-                ADD TO KIT
+                {isSoldOut ? 'SOLD OUT' : 'ADD TO KIT'}
               </button>
             )}
           </div>
@@ -1112,13 +1076,19 @@ export default function ShopPortal() {
               <h1 className="section-title" style={{ marginBottom: 0 }}>Browse Equipment</h1>
             </div>
             <button className="btn-list-gear" onClick={() => {
-              setListingForm(prev => ({
-                ...prev,
-                sellerName: currentUser?.name || '',
-                sellerPhone: currentUser?.phone || '',
-                sellerEmail: currentUser?.email || ''
-              }));
-              setIsListingModalOpen(true);
+              if (!currentUser) {
+                alert("Please log in using the button at the top right to list your gear.");
+              } else if (!currentUser.emailVerified) {
+                alert("Please check your email and click the verification link before listing gear.");
+              } else {
+                setListingForm(prev => ({
+                  ...prev,
+                  sellerName: currentUser?.name || '',
+                  sellerPhone: currentUser?.phone || '',
+                  sellerEmail: currentUser?.email || ''
+                }));
+                setIsListingModalOpen(true);
+              }
             }}>
               + List Your Gear
             </button>
@@ -1167,32 +1137,18 @@ export default function ShopPortal() {
                   </div>
                 </div>
 
-                {/* Profile Switcher dropdown */}
+                {/* Logout Button */}
                 <div className="profile-switcher-wrapper">
-                  <label>Switch Profile Account:</label>
-                  <div className="profile-switcher-row">
-                    <select 
-                      value={currentUser?.id || ''} 
-                      onChange={(e) => {
-                        const selected = profiles.find(u => u.id === e.target.value);
-                        if (selected) changeUser(selected);
-                      }}
-                      className="profile-select-dropdown"
-                    >
-                      {profiles.map(user => (
-                        <option key={user.id} value={user.id}>{user.name} ({user.role})</option>
-                      ))}
-                    </select>
-                    
-                    <button 
-                      type="button" 
-                      className="btn-create-profile-trigger" 
-                      onClick={() => setIsCreateProfileModalOpen(true)}
-                      title="Create New Profile"
-                    >
-                      + New Profile
-                    </button>
-                  </div>
+                  <button 
+                    className="btn-create-profile-trigger" 
+                    onClick={() => {
+                      logout();
+                      setShopTab('all');
+                    }} 
+                    style={{marginTop: 0, padding: '10px 20px', width: 'auto'}}
+                  >
+                    Log Out of Gear Plug
+                  </button>
                 </div>
               </div>
 
@@ -1845,10 +1801,9 @@ export default function ShopPortal() {
                       <input 
                         type="text" 
                         name="sellerName" 
-                        placeholder="Your full name" 
                         value={listingForm.sellerName} 
-                        onChange={handleListingFormChange} 
-                        required 
+                        readOnly
+                        className="input-readonly"
                       />
                     </div>
                     <div className="form-field">
@@ -1856,10 +1811,9 @@ export default function ShopPortal() {
                       <input 
                         type="tel" 
                         name="sellerPhone" 
-                        placeholder="e.g. +256 701 234 567" 
                         value={listingForm.sellerPhone} 
-                        onChange={handleListingFormChange} 
-                        required 
+                        readOnly
+                        className="input-readonly"
                       />
                     </div>
                     <div className="form-field">
@@ -1867,9 +1821,9 @@ export default function ShopPortal() {
                       <input 
                         type="email" 
                         name="sellerEmail" 
-                        placeholder="Optional" 
                         value={listingForm.sellerEmail} 
-                        onChange={handleListingFormChange} 
+                        readOnly
+                        className="input-readonly"
                       />
                     </div>
                   </div>
@@ -1889,132 +1843,6 @@ export default function ShopPortal() {
         </div>
       )}
 
-      {/* ── Create Profile Modal ── */}
-      {isCreateProfileModalOpen && (
-        <div className="marketplace-modal-overlay">
-          <div className="marketplace-modal shadow-premium">
-            <button className="modal-close-btn" onClick={() => setIsCreateProfileModalOpen(false)}>
-              <X size={20} />
-            </button>
-            <div className="modal-header">
-              <User size={24} className="text-accent" />
-              <h2>Create Your Profile</h2>
-              <p className="text-muted">Register your filmmaking/rental profile on Gear Plug to personalize your dashboard.</p>
-            </div>
-            
-            <form onSubmit={handleProfileSubmit} className="marketplace-form">
-              <div className="form-grid">
-                <div className="form-main-details">
-                  <div className="form-row">
-                    <div className="form-field">
-                      <label>Full Name *</label>
-                      <input 
-                        type="text" 
-                        name="name" 
-                        placeholder="e.g. John Doe" 
-                        value={profileForm.name} 
-                        onChange={handleProfileFormChange} 
-                        required 
-                      />
-                    </div>
-                    <div className="form-field">
-                      <label>Email Address *</label>
-                      <input 
-                        type="email" 
-                        name="email" 
-                        placeholder="e.g. john@example.com" 
-                        value={profileForm.email} 
-                        onChange={handleProfileFormChange} 
-                        required 
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="form-row">
-                    <div className="form-field">
-                      <label>Phone Number *</label>
-                      <input 
-                        type="tel" 
-                        name="phone" 
-                        placeholder="e.g. +256 700 123 456" 
-                        value={profileForm.phone} 
-                        onChange={handleProfileFormChange} 
-                        required 
-                      />
-                    </div>
-                    <div className="form-field">
-                      <label>Professional Role *</label>
-                      <select 
-                        name="role" 
-                        value={profileForm.role} 
-                        onChange={handleProfileFormChange}
-                      >
-                        <option value="Professional Filmmaker">Professional Filmmaker</option>
-                        <option value="Commercial Director">Commercial Director</option>
-                        <option value="Camera Assistant">Camera Assistant</option>
-                        <option value="Rental House Owner">Rental House Owner</option>
-                        <option value="Content Creator">Content Creator</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="form-row">
-                    <div className="form-field">
-                      <label>Company / Organization</label>
-                      <input 
-                        type="text" 
-                        name="company" 
-                        placeholder="e.g. Aura Media Kampala" 
-                        value={profileForm.company} 
-                        onChange={handleProfileFormChange} 
-                      />
-                    </div>
-                    <div className="form-field">
-                      <label>Location *</label>
-                      <input 
-                        type="text" 
-                        name="location" 
-                        placeholder="e.g. Kampala, UG" 
-                        value={profileForm.location} 
-                        onChange={handleProfileFormChange} 
-                        required 
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="form-sidebar-details">
-                  <div className="form-field">
-                    <label>Profile Avatar Emoji *</label>
-                    <select 
-                      name="avatar" 
-                      value={profileForm.avatar} 
-                      onChange={handleProfileFormChange}
-                      style={{ fontSize: '1.5rem', height: '54px' }}
-                    >
-                      <option value="🎥">🎥 Camera</option>
-                      <option value="🎬">🎬 Clapperboard</option>
-                      <option value="📸">📸 DSLR Camera</option>
-                      <option value="💡">💡 Lighting</option>
-                      <option value="🎧">🎧 Audio</option>
-                      <option value="⭐">⭐ Star</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="modal-footer">
-                <button type="button" className="btn-cancel" onClick={() => setIsCreateProfileModalOpen(false)}>
-                  Cancel
-                </button>
-                <button type="submit" className="btn-submit-listing">
-                  Create Profile
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* ── Item Details & Specs Modal (eBay Style) ── */}
       {selectedProduct && (
