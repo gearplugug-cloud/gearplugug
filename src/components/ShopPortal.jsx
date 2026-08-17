@@ -13,14 +13,13 @@ const MOUNTS = ['All', 'Sony E-mount', 'Canon EF', 'Canon RF', 'ARRI PL', 'Leica
 export default function ShopPortal() {
   const { 
     kitItems, totalCost, clearKit, addToKit, removeFromKit, 
-    products, addMarketplaceProduct, currentUser, orders, addOrder, 
-    shopTab, setShopTab, logout,
+    products, addMarketplaceProduct, currentUser, addOrder, 
+    shopTab, setShopTab,
     favorites, toggleFavorite,
-    recentlyViewed, addRecentlyViewed,
     auctions, bidInputs, handleBidInputChange, placeBid
   } = useKit();
   const [view, setView] = useState('browse'); // 'browse' | 'checkout' | 'success'
-  
+  const [lastOrderId, setLastOrderId] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterBrand, setFilterBrand] = useState('All');
@@ -123,6 +122,12 @@ export default function ShopPortal() {
     setFilterMount(filter.filterMount || 'All');
     setFilterMinPrice(filter.filterMinPrice || '');
     setFilterMaxPrice(filter.filterMaxPrice || '');
+  };
+
+  const deleteSavedFilter = (id) => {
+    const updated = savedFilters.filter(f => f.id !== id);
+    setSavedFilters(updated);
+    localStorage.setItem('gearplug_saved_filters', JSON.stringify(updated));
   };
 
   const unifiedCatalog = useMemo(() => {
@@ -379,6 +384,7 @@ export default function ShopPortal() {
             addOrder(newOrder);
             clearKit();
             setIsCheckingOut(false);
+            setLastOrderId(newOrder.id);
             setView('success');
           } else {
             alert("Payment transaction was not successful: " + paymentResponse.message);
@@ -413,7 +419,6 @@ export default function ShopPortal() {
 
   /* ─────────────── SUCCESS VIEW ─────────────── */
   if (view === 'success') {
-    const orderNum = `GP-${Date.now().toString(36).toUpperCase()}`;
     return (
       <div className="shop-portal container-fluid success-view">
         <div className="success-card">
@@ -421,7 +426,7 @@ export default function ShopPortal() {
             <CheckCircle size={64} />
           </div>
           <h1>Order Confirmed!</h1>
-          <p className="order-number">Order #{orderNum}</p>
+          <p className="order-number">Order #{lastOrderId}</p>
           <p className="success-msg">
             Your gear is being prepped. A Gear Plug specialist will contact you
             at <strong>{form.phone || 'your number'}</strong> shortly for delivery
