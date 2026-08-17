@@ -71,16 +71,7 @@ export default function ShopPortal() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Dynamically load Flutterwave Checkout SDK script
-  useEffect(() => {
-    const script = document.createElement('script');
-    script.src = 'https://checkout.flutterwave.com/v3.js';
-    script.async = true;
-    document.body.appendChild(script);
-    return () => {
-      document.body.removeChild(script);
-    };
-  }, []);
+
 
   // --- 1. Flash Sale state and timer ---
   const [flashSaleTimeLeft, setFlashSaleTimeLeft] = useState(14400); // 4 hours
