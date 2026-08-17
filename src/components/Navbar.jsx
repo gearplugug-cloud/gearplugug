@@ -53,6 +53,39 @@ export default function Navbar() {
           <img src="/logo.png" alt="Gear Plug UG Logo" className="logo-img" />
         </a>
 
+        <div className={`nav-links ${isMenuOpen ? 'mobile-open' : ''}`}>
+          <form className="navbar-search-form mobile-only" onSubmit={handleSearchSubmit}>
+            <Search size={16} className="navbar-search-icon" />
+            <input 
+              type="text" 
+              placeholder="Search gear..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </form>
+          <button
+            type="button"
+            className={`nav-link ${onHome ? 'active' : ''}`}
+            onClick={() => goToSection(null)}
+          >
+            Home
+          </button>
+          <a
+            href="/shop"
+            className={`nav-link ${location.pathname === '/shop' ? 'active' : ''}`}
+            onClick={(e) => { e.preventDefault(); navigate('/shop'); setIsMenuOpen(false); }}
+          >
+            Marketplace
+          </a>
+          <a
+            href="/rentals"
+            className={`nav-link ${location.pathname === '/rentals' ? 'active' : ''}`}
+            onClick={(e) => { e.preventDefault(); navigate('/rentals'); setIsMenuOpen(false); }}
+          >
+            Rentals
+          </a>
+        </div>
+
         <div className="nav-right-actions">
           <form className="navbar-search-form hidden-mobile" onSubmit={handleSearchSubmit}>
             <Search size={16} className="navbar-search-icon" />
@@ -99,39 +132,6 @@ export default function Navbar() {
           >
             {isMenuOpen ? <X size={28} /> : <Menu size={28} />}
           </button>
-        </div>
-
-        <div className={`nav-links ${isMenuOpen ? 'mobile-open' : ''}`}>
-          <form className="navbar-search-form mobile-only" onSubmit={handleSearchSubmit}>
-            <Search size={16} className="navbar-search-icon" />
-            <input 
-              type="text" 
-              placeholder="Search gear..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </form>
-          <button
-            type="button"
-            className={`nav-link ${onHome ? 'active' : ''}`}
-            onClick={() => goToSection(null)}
-          >
-            Home
-          </button>
-          <a
-            href="/shop"
-            className={`nav-link ${location.pathname === '/shop' ? 'active' : ''}`}
-            onClick={(e) => { e.preventDefault(); navigate('/shop'); setIsMenuOpen(false); }}
-          >
-            Marketplace
-          </a>
-          <a
-            href="/rentals"
-            className={`nav-link ${location.pathname === '/rentals' ? 'active' : ''}`}
-            onClick={(e) => { e.preventDefault(); navigate('/rentals'); setIsMenuOpen(false); }}
-          >
-            Rentals
-          </a>
         </div>
       </div>
       <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
