@@ -176,6 +176,173 @@ export const KitProvider = ({ children }) => {
   // Shared active shop tab state
   const [shopTab, setShopTab] = useState('all');
 
+  // Favorites (Watchlist) State
+  const [favorites, setFavorites] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('gearplug_favorites') || '[]');
+    } catch (e) {
+      return [];
+    }
+  });
+
+  const toggleFavorite = (productId) => {
+    setFavorites(prev => {
+      const next = prev.includes(productId) ? prev.filter(id => id !== productId) : [...prev, productId];
+      localStorage.setItem('gearplug_favorites', JSON.stringify(next));
+      return next;
+    });
+  };
+
+  // Recently Viewed State
+  const [recentlyViewed, setRecentlyViewed] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('gearplug_recently_viewed') || '[]');
+    } catch (e) {
+      return [];
+    }
+  });
+
+  const addRecentlyViewed = (product) => {
+    setRecentlyViewed(prev => {
+      const filtered = prev.filter(p => p.id !== product.id);
+      const next = [product, ...filtered].slice(0, 10); // Keep last 10
+      localStorage.setItem('gearplug_recently_viewed', JSON.stringify(next));
+      return next;
+    });
+  };
+
+  // Bidding Session (Auctions) State
+  const INITIAL_AUCTIONS = [
+    {
+      id: 'auc-001',
+      name: 'Leica M6 Classic Rangefinder',
+      brand: 'Leica',
+      category: 'Camera Bodies',
+      description: 'Stunning vintage analog camera in black chrome finish. Mechanical shutter, crisp viewfinder, pristine aesthetic condition.',
+      img: '/arri_alexa_1782843732555.png',
+      basePrice: 8500000,
+      currentBid: 9200000,
+      highestBidder: 'Kalyango David',
+      timeLeft: 7200 + 45, // 2 hours
+      bidsCount: 14,
+      minIncrement: 50000,
+      condition: 'Used - Mint',
+      sellerRating: '4.9 ★ (156 reviews)',
+      watchers: 24,
+      specs: {
+        lensMount: 'Leica M-mount',
+        sensorSize: '35mm Film (Analog)',
+        maxResolution: 'Film format',
+        shutterCount: 'Approx. 8,500 shutter actuations',
+        inclusions: 'Leica leather strap, body cap, original red box, batteries'
+      },
+      bidsHistory: [
+        { bidder: 'Kalyango David', amount: 9200000, time: '12 minutes ago' },
+        { bidder: 'Emma Patrick', amount: 9150000, time: '34 minutes ago' },
+        { bidder: 'Nsubuga Henry', amount: 9000000, time: '1 hour ago' },
+        { bidder: 'Lwanga Samuel', amount: 8850000, time: '2 hours ago' }
+      ]
+    },
+    {
+      id: 'auc-002',
+      name: 'Zeiss Otus 85mm f/1.4 Lens (Canon EF)',
+      brand: 'Zeiss',
+      category: 'Lenses',
+      description: 'The ultimate portrait prime lens. Delivers medium-format detail and quality on full-frame cameras.',
+      img: '/zeiss_cp3_1782843751691.png',
+      basePrice: 12000000,
+      currentBid: 12450000,
+      highestBidder: 'Nsubuga Henry',
+      timeLeft: 18000 + 12, // 5 hours
+      bidsCount: 8,
+      minIncrement: 100000,
+      condition: 'Used - Like New',
+      sellerRating: '5.0 ★ (43 reviews)',
+      watchers: 18,
+      specs: {
+        lensMount: 'Canon EF',
+        focalLength: '85mm',
+        maxAperture: 'f/1.4',
+        glassCondition: 'Mint (Absolutely clean optics, zero haze)',
+        inclusions: 'Front/rear metal caps, metal lens hood, original cherry wood presentation box'
+      },
+      bidsHistory: [
+        { bidder: 'Nsubuga Henry', amount: 12450000, time: '18 minutes ago' },
+        { bidder: 'Kalyango David', amount: 12350000, time: '45 minutes ago' },
+        { bidder: 'Lwanga Samuel', amount: 12200000, time: '2 hours ago' }
+      ]
+    }
+  ];
+
+  const [auctions, setAuctions] = useState(() => {
+    try {
+      const saved = localStorage.getItem('gearplug_auctions');
+      return saved ? JSON.parse(saved) : INITIAL_AUCTIONS;
+    } catch (e) {
+      return INITIAL_AUCTIONS;
+    }
+  });
+
+  const [bidInputs, setBidInputs] = useState({});
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setAuctions(prev => {
+        return prev.map(auc => ({
+          ...auc,
+          timeLeft: auc.timeLeft > 0 ? auc.timeLeft - 1 : 0
+        }));
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const placeBid = (aucId) => {
+    const inputVal = bidInputs[aucId];
+    if (!inputVal) return;
+    const bidAmount = parseFloat(inputVal);
+    const target = auctions.find(a => a.id === aucId);
+    if (!target) return;
+    
+    if (target.timeLeft <= 0) {
+      alert("This auction session has ended!");
+      return;
+    }
+    
+    if (bidAmount < target.currentBid + target.minIncrement) {
+      alert(`Min bid required is UGX ${(target.currentBid + target.minIncrement).toLocaleString()}`);
+      return;
+    }
+    
+    const bidderName = currentUser ? currentUser.name : prompt("Enter your name to place the bid:") || "Anonymous";
+    
+    setAuctions(prev => {
+      const next = prev.map(auc => {
+        if (auc.id === aucId) {
+          const newBidLog = {
+            bidder: bidderName,
+            amount: bidAmount,
+            time: 'Just now'
+          };
+          const history = auc.bidsHistory ? [newBidLog, ...auc.bidsHistory] : [newBidLog];
+          return {
+            ...auc,
+            currentBid: bidAmount,
+            highestBidder: bidderName,
+            bidsCount: auc.bidsCount + 1,
+            bidsHistory: history
+          };
+        }
+        return auc;
+      });
+      localStorage.setItem('gearplug_auctions', JSON.stringify(next));
+      return next;
+    });
+    
+    setBidInputs(prev => ({ ...prev, [aucId]: '' }));
+    alert("Bid registered successfully!");
+  };
+
   // Orders/Purchases History State
   const [orders, setOrders] = useState(() => {
     try {
@@ -396,6 +563,15 @@ export const KitProvider = ({ children }) => {
       addOrder,
       shopTab,
       setShopTab,
+      favorites,
+      toggleFavorite,
+      recentlyViewed,
+      addRecentlyViewed,
+      auctions,
+      bidInputs,
+      setBidInputs,
+      handleBidInputChange: (id, val) => setBidInputs(p => ({ ...p, [id]: val })),
+      placeBid,
       theme,
       toggleTheme,
     }}>

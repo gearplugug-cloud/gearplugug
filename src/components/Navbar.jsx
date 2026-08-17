@@ -106,8 +106,7 @@ export default function Navbar() {
               type="button"
               className="navbar-profile-btn"
               onClick={() => {
-                setShopTab('profile');
-                navigate('/shop');
+                navigate('/profile');
                 setIsMenuOpen(false);
               }}
               title={`View Profile: ${currentUser.name}`}

@@ -11,7 +11,14 @@ const CONDITIONS = ['All', 'Brand New', 'Open Box', 'Used - Mint', 'Used - Like 
 const MOUNTS = ['All', 'Sony E-mount', 'Canon EF', 'Canon RF', 'ARRI PL', 'Leica M-mount', 'L-mount'];
 
 export default function ShopPortal() {
-  const { kitItems, totalCost, clearKit, addToKit, removeFromKit, products, addMarketplaceProduct, currentUser, orders, addOrder, shopTab, setShopTab, logout } = useKit();
+  const { 
+    kitItems, totalCost, clearKit, addToKit, removeFromKit, 
+    products, addMarketplaceProduct, currentUser, orders, addOrder, 
+    shopTab, setShopTab, logout,
+    favorites, toggleFavorite,
+    recentlyViewed, addRecentlyViewed,
+    auctions, bidInputs, handleBidInputChange, placeBid
+  } = useKit();
   const [view, setView] = useState('browse'); // 'browse' | 'checkout' | 'success'
   
   const [activeCategory, setActiveCategory] = useState('All');
@@ -79,204 +86,7 @@ export default function ShopPortal() {
   };
 
 
-  // --- 3. Favorites / Wishlist state ---
-  const [favorites, setFavorites] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem('gearplug_favorites') || '[]');
-    } catch (e) {
-      return [];
-    }
-  });
-
-  const toggleFavorite = (productId) => {
-    setFavorites(prev => {
-      const next = prev.includes(productId) ? prev.filter(id => id !== productId) : [...prev, productId];
-      localStorage.setItem('gearplug_favorites', JSON.stringify(next));
-      return next;
-    });
-  };
-
-  // --- 4. Saved Searches / Filters state ---
-  const [savedFilters, setSavedFilters] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem('gearplug_saved_filters') || '[]');
-    } catch (e) {
-      return [];
-    }
-  });
-
-  const saveCurrentFilter = () => {
-    if (!searchQuery && activeCategory === 'All') {
-      alert("Search query or category must be set to save a filter shortcut.");
-      return;
-    }
-    const filterName = searchQuery 
-      ? `"${searchQuery}" in ${activeCategory}` 
-      : `Category: ${activeCategory}`;
-      
-    const newFilter = {
-      id: `sf-${Date.now()}`,
-      category: activeCategory,
-      query: searchQuery,
-      name: filterName
-    };
-
-    setSavedFilters(prev => {
-      const next = [...prev, newFilter];
-      localStorage.setItem('gearplug_saved_filters', JSON.stringify(next));
-      return next;
-    });
-  };
-
-  const applySavedFilter = (filter) => {
-    setActiveCategory(filter.category);
-    setSearchQuery(filter.query);
-  };
-
-  const deleteSavedFilter = (id) => {
-    setSavedFilters(prev => {
-      const next = prev.filter(f => f.id !== id);
-      localStorage.setItem('gearplug_saved_filters', JSON.stringify(next));
-      return next;
-    });
-  };
-
-  // --- 5. Bidding Session (Auctions) state ---
-  const INITIAL_AUCTIONS = [
-    {
-      id: 'auc-001',
-      name: 'Leica M6 Classic Rangefinder',
-      brand: 'Leica',
-      category: 'Camera Bodies',
-      description: 'Stunning vintage analog camera in black chrome finish. Mechanical shutter, crisp viewfinder, pristine aesthetic condition.',
-      img: '/arri_alexa_1782843732555.png',
-      basePrice: 8500000,
-      currentBid: 9200000,
-      highestBidder: 'Kalyango David',
-      timeLeft: 7200 + 45, // 2 hours
-      bidsCount: 14,
-      minIncrement: 50000,
-      condition: 'Used - Mint',
-      sellerRating: '4.9 ★ (156 reviews)',
-      watchers: 24,
-      specs: {
-        lensMount: 'Leica M-mount',
-        sensorSize: '35mm Film (Analog)',
-        maxResolution: 'Film format',
-        shutterCount: 'Approx. 8,500 shutter actuations',
-        inclusions: 'Leica leather strap, body cap, original red box, batteries'
-      },
-      bidsHistory: [
-        { bidder: 'Kalyango David', amount: 9200000, time: '12 minutes ago' },
-        { bidder: 'Emma Patrick', amount: 9150000, time: '34 minutes ago' },
-        { bidder: 'Nsubuga Henry', amount: 9000000, time: '1 hour ago' },
-        { bidder: 'Lwanga Samuel', amount: 8850000, time: '2 hours ago' }
-      ]
-    },
-    {
-      id: 'auc-002',
-      name: 'Zeiss Otus 85mm f/1.4 Lens (Canon EF)',
-      brand: 'Zeiss',
-      category: 'Lenses',
-      description: 'The ultimate portrait prime lens. Delivers medium-format detail and quality on full-frame cameras.',
-      img: '/zeiss_cp3_1782843751691.png',
-      basePrice: 12000000,
-      currentBid: 12450000,
-      highestBidder: 'Nsubuga Henry',
-      timeLeft: 18000 + 12, // 5 hours
-      bidsCount: 8,
-      minIncrement: 100000,
-      condition: 'Used - Like New',
-      sellerRating: '5.0 ★ (43 reviews)',
-      watchers: 18,
-      specs: {
-        lensMount: 'Canon EF',
-        focalLength: '85mm',
-        maxAperture: 'f/1.4',
-        glassCondition: 'Mint (Absolutely clean optics, zero haze)',
-        inclusions: 'Front/rear metal caps, metal lens hood, original cherry wood presentation box'
-      },
-      bidsHistory: [
-        { bidder: 'Nsubuga Henry', amount: 12450000, time: '18 minutes ago' },
-        { bidder: 'Kalyango David', amount: 12350000, time: '45 minutes ago' },
-        { bidder: 'Lwanga Samuel', amount: 12200000, time: '2 hours ago' }
-      ]
-    }
-  ];
-
-  const [auctions, setAuctions] = useState(() => {
-    try {
-      const saved = localStorage.getItem('gearplug_auctions');
-      return saved ? JSON.parse(saved) : INITIAL_AUCTIONS;
-    } catch (e) {
-      return INITIAL_AUCTIONS;
-    }
-  });
-
-  const [bidInputs, setBidInputs] = useState({});
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setAuctions(prev => {
-        const ticked = prev.map(auc => ({
-          ...auc,
-          timeLeft: auc.timeLeft > 0 ? auc.timeLeft - 1 : 0
-        }));
-        return ticked;
-      });
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const handleBidInputChange = (aucId, value) => {
-    setBidInputs(prev => ({ ...prev, [aucId]: value }));
-  };
-
-  const placeBid = (aucId) => {
-    const inputVal = bidInputs[aucId];
-    if (!inputVal) return;
-    const bidAmount = parseFloat(inputVal);
-    const target = auctions.find(a => a.id === aucId);
-    if (!target) return;
-    
-    if (target.timeLeft <= 0) {
-      alert("This auction session has ended!");
-      return;
-    }
-    
-    if (bidAmount < target.currentBid + target.minIncrement) {
-      alert(`Min bid required is UGX ${(target.currentBid + target.minIncrement).toLocaleString()}`);
-      return;
-    }
-    
-    const bidderName = prompt("Enter your name to place the bid:") || "Anonymous";
-    
-    setAuctions(prev => {
-      const next = prev.map(auc => {
-        if (auc.id === aucId) {
-          const newBidLog = {
-            bidder: bidderName,
-            amount: bidAmount,
-            time: 'Just now'
-          };
-          const history = auc.bidsHistory ? [newBidLog, ...auc.bidsHistory] : [newBidLog];
-          return {
-            ...auc,
-            currentBid: bidAmount,
-            highestBidder: bidderName,
-            bidsCount: auc.bidsCount + 1,
-            bidsHistory: history
-          };
-        }
-        return auc;
-      });
-      localStorage.setItem('gearplug_auctions', JSON.stringify(next));
-      return next;
-    });
-    
-    setBidInputs(prev => ({ ...prev, [aucId]: '' }));
-    alert("Bid registered successfully!");
-  };
+  // --- End of migrated state ---
 
   const unifiedCatalog = useMemo(() => {
     const buyItems = products.map(p => ({ ...p, format: 'buy' }));
@@ -568,7 +378,7 @@ export default function ShopPortal() {
   if (view === 'success') {
     const orderNum = `GP-${Date.now().toString(36).toUpperCase()}`;
     return (
-      <div className="shop-portal container success-view">
+      <div className="shop-portal container-fluid success-view">
         <div className="success-card">
           <div className="success-icon-ring">
             <CheckCircle size={64} />
@@ -609,7 +419,7 @@ export default function ShopPortal() {
   /* ─────────────── CHECKOUT VIEW ─────────────── */
   if (view === 'checkout') {
     return (
-      <div className="shop-portal container checkout-view">
+      <div className="shop-portal container-fluid checkout-view">
         <div className="portal-header mb-8">
           <button className="back-home-link" onClick={() => setView('browse')}>
             <ArrowLeft size={16} /> Back to Shop
@@ -979,7 +789,7 @@ export default function ShopPortal() {
 
   /* ─────────────── BROWSE VIEW (default) ─────────────── */
   return (
-    <div className="shop-portal container" style={{ paddingTop: '120px', paddingBottom: '100px', minHeight: '100vh' }}>
+    <div className="shop-portal container-fluid" style={{ paddingTop: '120px', paddingBottom: '100px', minHeight: '100vh' }}>
       <div className="portal-header mb-8">
         <a href="/" className="back-home-link">
           <ArrowLeft size={16} /> Back to Home
@@ -1107,12 +917,6 @@ export default function ShopPortal() {
               onClick={() => setShopTab('bid')}
             >
               🔨 Bidding Sessions (Live Auctions)
-            </button>
-            <button 
-              className={`shop-tab-btn ${shopTab === 'profile' ? 'active' : ''}`}
-              onClick={() => setShopTab('profile')}
-            >
-              👤 My Profile Dashboard
             </button>
           </div>
 
@@ -1258,232 +1062,65 @@ export default function ShopPortal() {
                                   {auc.timeLeft > 0 ? formatTime(auc.timeLeft) : 'ENDED'}
                                 </td>
                                 <td>
-                                  <span className="status-badge winning">👑 High Bidder</span>
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
-
-                {/* Orders History */}
-                <div className="dashboard-section shadow-premium mt-8">
-                  <h3>Order History</h3>
-                  {orders.filter(o => o.customerId === currentUser?.id).length === 0 ? (
-                    <p className="no-data text-muted">You have no past purchases.</p>
-                  ) : (
-                    <div className="dashboard-table-wrapper">
-                      <table className="dashboard-table">
-                        <thead>
-                          <tr>
-                            <th>Order ID</th>
-                            <th>Date</th>
-                            <th>Items</th>
-                            <th>Total Price</th>
-                            <th>City</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {orders.filter(o => o.customerId === currentUser?.id).map(ord => (
-                            <tr key={ord.id}>
-                              <td className="font-mono text-xs">{ord.id}</td>
-                              <td>{new Date(ord.date).toLocaleDateString()}</td>
-                              <td>
-                                <ul className="table-items-list">
-                                  {ord.items.map((it, idx) => (
-                                    <li key={idx}>{it.name}</li>
-                                  ))}
-                                </ul>
-                              </td>
-                              <td className="font-bold">UGX {ord.total.toLocaleString()}</td>
-                              <td>{ord.city}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          ) : (
-            /* Unified eBay-style Search & Filter view with Sidebar */
-            <div className="shop-unified-browser">
-              {/* Sticky Sidebar Filter Panel */}
-              <aside className="shop-filters-sidebar shadow-premium">
-                <div className="sidebar-filter-section">
-                  <h3>Search & Save</h3>
-                  <div className="sidebar-search-box">
-                    <Search size={14} className="search-icon" />
-                    <input 
-                      type="text" 
-                      placeholder="Search items..." 
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                  </div>
-                  <button className="btn-save-filter mt-2" onClick={saveCurrentFilter}>
-                    💾 Save This Search
+                      setFilterBrand('All');
+                      setFilterCondition('All');
+                      setFilterMount('All');
+                      setFilterMinPrice('');
+                      setFilterMaxPrice('');
+                      setSearchQuery('');
+                      setActiveCategory('All');
+                    }}
+                  >
+                    🔄 Reset All Filters
                   </button>
-                </div>
-
-                <div className="sidebar-filter-section">
-                  <h3>Category</h3>
-                  <ul className="filter-list">
-                    {CATEGORIES.map(cat => (
-                      <li key={cat}>
-                        <button 
-                          className={`filter-link-btn ${activeCategory === cat ? 'active' : ''}`}
-                          onClick={() => setActiveCategory(cat)}
-                        >
-                          {cat === 'All' ? '📁 All Categories' : cat}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="sidebar-filter-section">
-                  <h3>Brand</h3>
-                  <ul className="filter-checkbox-list">
-                    {BRANDS.map(brand => (
-                      <li key={brand}>
-                        <label className="checkbox-label">
-                          <input 
-                            type="radio" 
-                            name="filter-brand"
-                            checked={filterBrand === brand}
-                            onChange={() => setFilterBrand(brand)}
-                          />
-                          <span>{brand}</span>
-                        </label>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="sidebar-filter-section">
-                  <h3>Condition</h3>
-                  <ul className="filter-checkbox-list">
-                    {CONDITIONS.map(cond => (
-                      <li key={cond}>
-                        <label className="checkbox-label">
-                          <input 
-                            type="radio" 
-                            name="filter-condition"
-                            checked={filterCondition === cond}
-                            onChange={() => setFilterCondition(cond)}
-                          />
-                          <span>{cond}</span>
-                        </label>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="sidebar-filter-section">
-                  <h3>Lens Mount</h3>
-                  <ul className="filter-checkbox-list">
-                    {MOUNTS.map(mnt => (
-                      <li key={mnt}>
-                        <label className="checkbox-label">
-                          <input 
-                            type="radio" 
-                            name="filter-mount"
-                            checked={filterMount === mnt}
-                            onChange={() => setFilterMount(mnt)}
-                          />
-                          <span>{mnt === 'All' ? 'All Mounts' : mnt.replace('Sony ', '').replace('ARRI ', '')}</span>
-                        </label>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="sidebar-filter-section">
-                  <h3>Price (UGX)</h3>
-                  <div className="price-range-inputs">
-                    <input 
-                      type="number" 
-                      placeholder="Min" 
-                      value={filterMinPrice}
-                      onChange={(e) => setFilterMinPrice(e.target.value)}
-                    />
-                    <span>to</span>
-                    <input 
-                      type="number" 
-                      placeholder="Max" 
-                      value={filterMaxPrice}
-                      onChange={(e) => setFilterMaxPrice(e.target.value)}
-                    />
-                  </div>
-                  {(filterMinPrice || filterMaxPrice || filterBrand !== 'All' || filterCondition !== 'All' || filterMount !== 'All' || searchQuery || activeCategory !== 'All') && (
-                    <button 
-                      className="btn-clear-filters text-accent text-xs mt-3"
-                      onClick={() => {
-                        setFilterBrand('All');
-                        setFilterCondition('All');
-                        setFilterMount('All');
-                        setFilterMinPrice('');
-                        setFilterMaxPrice('');
-                        setSearchQuery('');
-                        setActiveCategory('All');
-                      }}
-                    >
-                      🔄 Reset All Filters
-                    </button>
-                  )}
-                </div>
-              </aside>
-
-              {/* Main Results Panel */}
-              <div className="shop-results-panel">
-                <div className="results-toolbar mb-6">
-                  <div className="results-count-summary text-xs text-muted">
-                    <span className="count-number font-bold text-accent">{filteredProducts.length}</span> items found
-                    {searchQuery && <span> for "{searchQuery}"</span>}
-                  </div>
-                  
-                  <div className="view-mode-toggle">
-                    <button 
-                      className={`view-toggle-btn ${viewMode === 'grid' ? 'active' : ''}`}
-                      onClick={() => setViewMode('grid')}
-                      title="Grid View"
-                    >
-                      Grid
-                    </button>
-                    <button 
-                      className={`view-toggle-btn ${viewMode === 'list' ? 'active' : ''}`}
-                      onClick={() => setViewMode('list')}
-                      title="List View"
-                    >
-                      List
-                    </button>
-                  </div>
-                </div>
-
-                {loading ? (
-                  <div className="loading-state">
-                    <Loader2 className="animate-spin" size={40} />
-                    <p>Scanning Gear Plug Database...</p>
-                  </div>
-                ) : filteredProducts.length === 0 ? (
-                  <div className="empty-state shadow-premium">
-                    <Package size={48} className="text-muted mb-4" />
-                    <h3>No matching gear found</h3>
-                    <p className="text-muted">Try resetting your sidebar filters or adjusting your search term.</p>
-                  </div>
-                ) : (
-                  <div className={viewMode === 'list' ? 'shop-product-list' : 'shop-product-grid'}>
-                    {filteredProducts.map(item => renderProductItem(item, viewMode === 'list'))}
-                  </div>
                 )}
               </div>
+            </aside>
+
+            {/* Main Results Panel */}
+            <div className="shop-results-panel">
+              <div className="results-toolbar mb-6">
+                <div className="results-count-summary text-xs text-muted">
+                  <span className="count-number font-bold text-accent">{filteredProducts.length}</span> items found
+                  {searchQuery && <span> for "{searchQuery}"</span>}
+                </div>
+                
+                <div className="view-mode-toggle">
+                  <button 
+                    className={`view-toggle-btn ${viewMode === 'grid' ? 'active' : ''}`}
+                    onClick={() => setViewMode('grid')}
+                    title="Grid View"
+                  >
+                    Grid
+                  </button>
+                  <button 
+                    className={`view-toggle-btn ${viewMode === 'list' ? 'active' : ''}`}
+                    onClick={() => setViewMode('list')}
+                    title="List View"
+                  >
+                    List
+                  </button>
+                </div>
+              </div>
+
+              {loading ? (
+                <div className="loading-state">
+                  <Loader2 className="animate-spin" size={40} />
+                  <p>Scanning Gear Plug Database...</p>
+                </div>
+              ) : filteredProducts.length === 0 ? (
+                <div className="empty-state shadow-premium">
+                  <Package size={48} className="text-muted mb-4" />
+                  <h3>No matching gear found</h3>
+                  <p className="text-muted">Try resetting your sidebar filters or adjusting your search term.</p>
+                </div>
+              ) : (
+                <div className={viewMode === 'list' ? 'shop-product-list' : 'shop-product-grid'}>
+                  {filteredProducts.map(item => renderProductItem(item, viewMode === 'list'))}
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
 
         {/* ── Right: Sidebar Cart ── */}

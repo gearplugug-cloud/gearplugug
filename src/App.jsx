@@ -12,6 +12,7 @@ import ShopPortal from './components/ShopPortal';
 import LiveChat from './components/LiveChat';
 import OperationalVideo from './components/OperationalVideo';
 import RentalForm from './components/RentalForm';
+import ProfileDashboard from './pages/ProfileDashboard';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -69,6 +70,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/shop" element={<ShopPortal />} />
             <Route path="/rentals" element={<Rentals />} />
+            <Route path="/profile" element={<ProfileDashboard />} />
           </Routes>
         </main>
 
