@@ -5,6 +5,7 @@ import './AuthModal.css';
 export default function AuthModal({ isOpen, onClose }) {
   const { login, signup, authError, isAuthLoading } = useKit();
   const [isLogin, setIsLogin] = useState(true);
+  const [verificationSent, setVerificationSent] = useState(false);
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -15,14 +16,41 @@ export default function AuthModal({ isOpen, onClose }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    let success = false;
+    let result;
     if (isLogin) {
-      success = await login(email, password);
+      result = await login(email, password);
     } else {
-      success = await signup(email, password, firstName, lastName);
+      result = await signup(email, password, firstName, lastName);
     }
-    if (success) onClose();
+    
+    if (result === true) {
+      onClose();
+    } else if (result === 'verify') {
+      setVerificationSent(true);
+    }
   };
+
+  if (verificationSent) {
+    return (
+      <div className="auth-modal-overlay">
+        <div className="auth-modal" style={{ textAlign: 'center' }}>
+          <button className="auth-close-btn" onClick={onClose}>&times;</button>
+          <div style={{ fontSize: '48px', marginBottom: '16px' }}>✉️</div>
+          <h2 className="auth-title">Check Your Email</h2>
+          <p style={{ color: 'var(--text-muted)', marginBottom: '24px', lineHeight: 1.5 }}>
+            We've sent a verification link to <strong>{email}</strong>.<br/>
+            Please click the link to activate your seller account before logging in.
+          </p>
+          <button 
+            className="auth-submit-btn" 
+            onClick={() => { setVerificationSent(false); setIsLogin(true); }}
+          >
+            Return to Log In
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="auth-modal-overlay">

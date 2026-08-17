@@ -136,7 +136,10 @@ export const KitProvider = ({ children }) => {
         })
       });
       
-      return true;
+      // Sign out immediately to enforce email verification
+      await signOut(auth);
+      
+      return 'verify';
     } catch (error) {
       setAuthError(error.message);
       return false;
@@ -149,7 +152,14 @@ export const KitProvider = ({ children }) => {
     setIsAuthLoading(true);
     setAuthError('');
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      
+      if (!userCredential.user.emailVerified) {
+        await signOut(auth);
+        setAuthError('Please verify your email address before logging in.');
+        return false;
+      }
+      
       return true;
     } catch (error) {
       setAuthError(error.message);
