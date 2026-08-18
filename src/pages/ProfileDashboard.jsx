@@ -1,12 +1,42 @@
 import React, { useState } from 'react';
 import { useKit } from '../context/KitContext';
-import { Package, Heart, Search, Eye, Settings, User, CreditCard, LogOut, Loader2, Edit, ChevronRight } from 'lucide-react';
+import { Package, Heart, Search, Eye, Settings, User, CreditCard, LogOut, Loader2, Edit, ChevronRight, Save, X } from 'lucide-react';
 import './ProfileDashboard.css';
 import { Link } from 'react-router-dom';
 
 export default function ProfileDashboard() {
-  const { currentUser, favorites, recentlyViewed, orders, logout } = useKit();
+  const { currentUser, favorites, recentlyViewed, orders, logout, updateUserProfile } = useKit();
   const [activeTab, setActiveTab] = useState('summary');
+  
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [editForm, setEditForm] = useState({ name: '', phone: '', company: '', location: '' });
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleEditClick = () => {
+    setEditForm({
+      name: currentUser.name || '',
+      phone: currentUser.phone || '',
+      company: currentUser.company || '',
+      location: currentUser.location || ''
+    });
+    setIsEditingProfile(true);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditingProfile(false);
+  };
+
+  const handleSaveProfile = async () => {
+    if (!updateUserProfile) return;
+    setIsSaving(true);
+    await updateUserProfile(editForm);
+    setIsSaving(false);
+    setIsEditingProfile(false);
+  };
+
+  const handleFormChange = (e) => {
+    setEditForm({ ...editForm, [e.target.name]: e.target.value });
+  };
 
   if (!currentUser) {
     return (
@@ -167,28 +197,57 @@ export default function ProfileDashboard() {
           <div className="tab-pane-content">
             <div className="flex justify-between items-center mb-6">
               <h2 className="tab-title m-0">Personal Information</h2>
-              <button className="btn-outline-small"><Edit size={14} className="mr-2" /> Edit</button>
+              {!isEditingProfile ? (
+                <button className="btn-outline-small" onClick={handleEditClick}>
+                  <Edit size={14} className="mr-2" /> Edit
+                </button>
+              ) : (
+                <div className="flex" style={{ gap: '10px' }}>
+                  <button className="btn-outline-small" onClick={handleCancelEdit} disabled={isSaving}>
+                    <X size={14} className="mr-2" /> Cancel
+                  </button>
+                  <button className="btn-primary" style={{ padding: '6px 12px', fontSize: '13px' }} onClick={handleSaveProfile} disabled={isSaving}>
+                    {isSaving ? <Loader2 size={14} className="animate-spin mr-2" /> : <Save size={14} className="mr-2" />} Save
+                  </button>
+                </div>
+              )}
             </div>
             <div className="info-grid">
               <div className="info-group">
                 <label>Full Name</label>
-                <div className="info-val">{currentUser.name}</div>
+                {isEditingProfile ? (
+                  <input type="text" name="name" className="input-field" value={editForm.name} onChange={handleFormChange} />
+                ) : (
+                  <div className="info-val">{currentUser.name}</div>
+                )}
               </div>
               <div className="info-group">
                 <label>Email Address</label>
-                <div className="info-val">{currentUser.email}</div>
+                <div className="info-val">{currentUser.email} <span style={{fontSize:'11px', color:'#888', marginLeft:'8px'}}>(Cannot be changed)</span></div>
               </div>
               <div className="info-group">
                 <label>Phone Number</label>
-                <div className="info-val">{currentUser.phone || 'Not provided'}</div>
+                {isEditingProfile ? (
+                  <input type="text" name="phone" className="input-field" value={editForm.phone} onChange={handleFormChange} placeholder="+256..." />
+                ) : (
+                  <div className="info-val">{currentUser.phone || 'Not provided'}</div>
+                )}
               </div>
               <div className="info-group">
                 <label>Company/Studio</label>
-                <div className="info-val">{currentUser.company || 'Not provided'}</div>
+                {isEditingProfile ? (
+                  <input type="text" name="company" className="input-field" value={editForm.company} onChange={handleFormChange} placeholder="Company Name" />
+                ) : (
+                  <div className="info-val">{currentUser.company || 'Not provided'}</div>
+                )}
               </div>
               <div className="info-group">
                 <label>Default Shipping Address</label>
-                <div className="info-val">{currentUser.location || 'Kampala, Uganda'}</div>
+                {isEditingProfile ? (
+                  <input type="text" name="location" className="input-field" value={editForm.location} onChange={handleFormChange} placeholder="City, Country" />
+                ) : (
+                  <div className="info-val">{currentUser.location || 'Kampala, Uganda'}</div>
+                )}
               </div>
             </div>
           </div>

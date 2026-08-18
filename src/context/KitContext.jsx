@@ -96,12 +96,21 @@ export const KitProvider = ({ children }) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
+        let localProfile = {};
+        try {
+          const stored = localStorage.getItem(`userProfile_${user.uid}`);
+          if (stored) localProfile = JSON.parse(stored);
+        } catch(e) {}
+        
         setCurrentUser({
           id: user.uid,
           name: user.displayName || 'Vendor',
           email: user.email,
           emailVerified: user.emailVerified,
-          avatar: '👤'
+          avatar: '👤',
+          phone: localProfile.phone || '',
+          company: localProfile.company || '',
+          location: localProfile.location || ''
         });
       } else {
         setCurrentUser(null);
@@ -175,6 +184,35 @@ export const KitProvider = ({ children }) => {
 
   const logout = async () => {
     await signOut(auth);
+  };
+
+  const updateUserProfile = async (profileData) => {
+    try {
+      if (auth.currentUser) {
+        await updateProfile(auth.currentUser, { displayName: profileData.name });
+      }
+      
+      const newUserData = {
+        ...currentUser,
+        name: profileData.name,
+        phone: profileData.phone,
+        company: profileData.company,
+        location: profileData.location
+      };
+      
+      setCurrentUser(newUserData);
+      // Persist custom fields locally for now
+      localStorage.setItem(`userProfile_${currentUser?.id}`, JSON.stringify({
+        phone: profileData.phone,
+        company: profileData.company,
+        location: profileData.location
+      }));
+      
+      return true;
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      return false;
+    }
   };
 
   // Shared active shop tab state
@@ -554,6 +592,7 @@ export const KitProvider = ({ children }) => {
       isCartOpen,
       setIsCartOpen,
       toasts,
+      updateUserProfile,
       showToast,
       products,
       addMarketplaceProduct,
