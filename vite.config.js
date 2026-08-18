@@ -6,12 +6,6 @@ export default defineConfig({
   plugins: [react()],
   base: '/',
   build: {
-    rollupOptions: {
-      output: {
-        entryFileNames: `assets/[name].js`,
-        chunkFileNames: `assets/[name].js`,
-        assetFileNames: `assets/[name].[ext]`
-      }
-    }
+    // Default Rollup options will generate hashed filenames for cache busting
   }
 })
