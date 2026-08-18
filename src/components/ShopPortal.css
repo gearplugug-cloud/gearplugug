@@ -101,6 +101,13 @@
   gap: 20px;
 }
 
+@media (max-width: 600px) {
+  .shop-product-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+  }
+}
+
 .loading-state,
 .empty-state {
   grid-column: 1 / -1;
@@ -2010,6 +2017,11 @@
 @media (max-width: 900px) {
   .shop-unified-browser {
     grid-template-columns: 1fr;
+  }
+  .shop-filters-sidebar {
+    position: relative;
+    top: 0;
+    z-index: 10;
   }
 }
 

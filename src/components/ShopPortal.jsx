@@ -707,7 +707,7 @@ export default function ShopPortal() {
       return (
         <div key={item.id} className="shop-list-row shadow-premium" onClick={() => setSelectedProduct(item)}>
           <div className="list-row-visual">
-            <img src={item.img} alt={item.name} style={{ opacity: isSoldOut ? 0.5 : 1 }} />
+            <img src={item.img} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: isSoldOut ? 0.5 : 1 }} />
             <span className={`format-badge ${isSoldOut ? 'badge-soldout' : (isAuction ? 'badge-auction' : 'badge-buynow')}`}>
               {isSoldOut ? 'SOLD OUT' : (isAuction ? '🔨 AUCTION' : '⚡ BUY IT NOW')}
             </span>
@@ -773,7 +773,7 @@ export default function ShopPortal() {
     return (
       <div key={item.id} className="shop-item-card shadow-premium" onClick={() => setSelectedProduct(item)}>
         <div className="item-visual">
-          <img src={item.img} alt={item.name} style={{ opacity: isSoldOut ? 0.5 : 1 }} />
+          <img src={item.img} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: isSoldOut ? 0.5 : 1 }} />
           <span className={`format-badge ${isSoldOut ? 'badge-soldout' : (isAuction ? 'badge-auction' : 'badge-buynow')}`}>
             {isSoldOut ? 'SOLD OUT' : (isAuction ? '🔨 AUCTION' : '⚡ BUY IT NOW')}
           </span>
