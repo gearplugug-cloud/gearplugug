@@ -1453,8 +1453,7 @@ export default function ShopPortal() {
                         type="text" 
                         name="sellerName" 
                         value={listingForm.sellerName} 
-                        readOnly
-                        className="input-readonly"
+                        onChange={handleListingFormChange}
                       />
                     </div>
                     <div className="form-field">
@@ -1463,8 +1462,8 @@ export default function ShopPortal() {
                         type="tel" 
                         name="sellerPhone" 
                         value={listingForm.sellerPhone} 
-                        readOnly
-                        className="input-readonly"
+                        onChange={handleListingFormChange}
+                        placeholder="+256..."
                       />
                     </div>
                     <div className="form-field">
@@ -1473,8 +1472,7 @@ export default function ShopPortal() {
                         type="email" 
                         name="sellerEmail" 
                         value={listingForm.sellerEmail} 
-                        readOnly
-                        className="input-readonly"
+                        onChange={handleListingFormChange}
                       />
                     </div>
                   </div>
