@@ -192,7 +192,7 @@ export default function ShopPortal() {
       return;
     }
 
-    const flwKey = import.meta.env.VITE_FLUTTERWAVE_PUBLIC_KEY || '';
+    const flwKey = import.meta.env.VITE_FLUTTERWAVE_PUBLIC_KEY || 'FLWPUBK_TEST-f61c4b95f9538445c99c63f39584857b-X';
     if (!flwKey) {
       alert("Flutterwave configuration is missing. Please add VITE_FLUTTERWAVE_PUBLIC_KEY to your environment/repository secrets.");
       return;
@@ -331,7 +331,7 @@ export default function ShopPortal() {
     e.preventDefault();
     if (kitItems.length === 0) return;
     
-    const flwKey = import.meta.env.VITE_FLUTTERWAVE_PUBLIC_KEY || '';
+    const flwKey = import.meta.env.VITE_FLUTTERWAVE_PUBLIC_KEY || 'FLWPUBK_TEST-f61c4b95f9538445c99c63f39584857b-X';
     if (!flwKey) {
       alert("Flutterwave configuration is missing. Please add VITE_FLUTTERWAVE_PUBLIC_KEY to your environment/repository secrets.");
       return;
