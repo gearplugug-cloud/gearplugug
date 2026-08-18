@@ -14,7 +14,8 @@ import {
   signOut, 
   onAuthStateChanged,
   sendEmailVerification,
-  updateProfile
+  updateProfile,
+  reload
 } from 'firebase/auth';
 
 const KitContext = createContext();
@@ -153,6 +154,9 @@ export const KitProvider = ({ children }) => {
     setAuthError('');
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      
+      // Force reload the user token from the server to get the latest emailVerified status
+      await reload(userCredential.user);
       
       if (!userCredential.user.emailVerified) {
         await signOut(auth);

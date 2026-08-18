@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 import { useKit } from '../context/KitContext';
 import './AuthModal.css';
 
@@ -9,6 +10,7 @@ export default function AuthModal({ isOpen, onClose }) {
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
 
@@ -86,13 +88,22 @@ export default function AuthModal({ isOpen, onClose }) {
             onChange={(e) => setEmail(e.target.value)} 
             required 
           />
-          <input 
-            type="password" 
-            placeholder="Password" 
-            value={password} 
-            onChange={(e) => setPassword(e.target.value)} 
-            required 
-          />
+          <div className="password-input-wrapper">
+            <input 
+              type={showPassword ? "text" : "password"} 
+              placeholder="Password" 
+              value={password} 
+              onChange={(e) => setPassword(e.target.value)} 
+              required 
+            />
+            <button 
+              type="button" 
+              className="password-toggle-btn"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
           <button type="submit" className="auth-submit-btn" disabled={isAuthLoading}>
             {isAuthLoading ? 'Processing...' : (isLogin ? 'Log In' : 'Sign Up & Become a Vendor')}
           </button>
